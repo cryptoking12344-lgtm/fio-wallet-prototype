@@ -35,7 +35,7 @@ button{cursor:pointer}
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;padding:22px 20px 28px;scrollbar-width:none}
 .screen::-webkit-scrollbar{display:none}
 .screen>*{flex-shrink:0}
-.screen.has-tabs{padding-bottom:112px}
+.screen.has-tabs{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
 .enter-fwd{animation:inFwd .42s var(--ease) both}
 .enter-back{animation:inBack .42s var(--ease) both}
 .enter-fade{animation:fadeIn .32s ease both}
@@ -118,11 +118,12 @@ p{margin:0}
 .seg button[aria-pressed="true"]{background:rgba(118,92,214,.4);color:#fff}
 
 /* tab bar */
-.tabbar{position:absolute;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));height:70px;border-radius:35px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:center;z-index:20;background:rgba(28,27,34,.82);border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 16px 40px rgba(0,0,0,.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-.tab{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;font-size:11px;font-weight:600;color:var(--faint);height:100%;transition:color .2s}
+.tabbar{position:absolute;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:center;padding:8px 8px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(18,17,23,.94);border-top:1px solid var(--line);box-shadow:0 -12px 32px rgba(0,0,0,.35);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;height:60px;padding:0;background:none;border:0;font-size:11.5px;font-weight:600;line-height:1;color:var(--faint);transition:color .2s}
+.tab .ind{width:60px;height:32px;border-radius:16px;display:flex;align-items:center;justify-content:center;transition:background .25s var(--ease),transform .25s var(--ease)}
+.tab:active .ind{transform:scale(.92)}
 .tab[aria-current="page"]{color:var(--lilac-2)}
-.tab .dot{width:4px;height:4px;border-radius:2px;background:var(--lilac);opacity:0;transition:opacity .2s}
-.tab[aria-current="page"] .dot{opacity:1}
+.tab[aria-current="page"] .ind{background:rgba(118,92,214,.32)}
 
 /* home */
 .handlebtn{display:flex;align-items:center;gap:10px;height:44px;padding:0 14px 0 6px;border-radius:22px;background:var(--glass);border:1px solid var(--line);font-size:16px}
@@ -381,7 +382,7 @@ function go(name, opts={}){
 function back(){ const p = hist.pop(); if (!p) return go('home',{noHist:true,dir:'back'}); go(p.name,{arg:p.arg,noHist:true,dir:'back'}); }
 function refresh(){ if (!cur) return; const el = stage.querySelector('.screen:not(.leave)'); const st = el.scrollTop; const def = SCREENS[cur.name]; el.innerHTML = def.html(cur.arg); el.classList.remove('enter-fwd','enter-back','enter-fade'); el.querySelectorAll('.stagger').forEach(s=>s.classList.remove('stagger')); if (def.after) def.after(el, cur.arg, true); el.scrollTop = st; }
 const tabbar = active => [['home','Wallet','wallet'],['activity','Activity','act'],['domains','Domains','globe'],['settings','Settings','gear']]
-  .map(([k,l,i])=>`<button class="tab" data-tab="${k}" ${k===active?'aria-current="page"':''}>${ic(i,22)}${l}<span class="dot"></span></button>`).join('');
+  .map(([k,l,i])=>`<button class="tab" data-tab="${k}" ${k===active?'aria-current="page"':''}><span class="ind">${ic(i,22)}</span>${l}</button>`).join('');
 const topbar = (title, extra='') => `<div class="topbar"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back')}</button><h2>${title}</h2>${extra}</div>`;
 
 /* ---------- overlays ---------- */
