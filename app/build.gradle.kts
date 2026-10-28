@@ -11,13 +11,25 @@ android {
         applicationId = "net.fio.walletprototype"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
+    }
+
+    // Fixed demo key so every CI build can install over the previous one.
+    // Demo only: never use this key for a real release.
+    signingConfigs {
+        create("demo") {
+            storeFile = file("demo-signing.keystore")
+            storePassword = "fiodemo123"
+            keyAlias = "fiodemo"
+            keyPassword = "fiodemo123"
+        }
     }
 
     buildTypes {
         debug {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("demo")
         }
     }
 
