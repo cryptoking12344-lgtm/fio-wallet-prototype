@@ -1,0 +1,1134 @@
+<title>FIO Wallet Demo</title>
+<meta name="theme-color" content="#121117">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: one phone-sized app; full-bleed on phones, framed device on larger screens. Single dark brand look. */
+:root{
+  --bg:#121117; --bg-2:#17161B; --ink:#FFFFFF; --muted:rgba(255,255,255,.66); --faint:rgba(255,255,255,.42);
+  --glass:rgba(255,255,255,.065); --glass-2:rgba(255,255,255,.10); --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.2);
+  --purple:#765CD6; --purple-d:#4C3A8F; --lilac:#B9A6FA; --lilac-2:#D6CBFF;
+  --mint:#6BEFB7; --mint-t:#8FF5C9; --pink:#F1BBF2; --yellow:#FDFF9B; --rose:#FF9EAE;
+  --font:"Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r-lg:28px; --r-md:20px; --r-sm:14px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:#0B0A0F;color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;display:flex;align-items:center;justify-content:center;overflow:hidden}
+*{box-sizing:border-box}
+button,input,textarea{font-family:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--lilac);outline-offset:2px}
+
+.device{position:relative;width:100%;height:100%;max-width:480px;overflow:hidden;background:var(--bg);isolation:isolate}
+@media (min-width:640px) and (min-height:760px){
+  .device{width:390px;height:844px;border-radius:52px;box-shadow:0 0 0 10px #1d1c22,0 0 0 11px #2c2b33,0 40px 120px rgba(0,0,0,.6)}
+}
+.mesh{position:absolute;inset:-20%;z-index:0;pointer-events:none;
+  background:radial-gradient(40% 30% at 10% 8%,rgba(118,92,214,.42),transparent 70%),
+             radial-gradient(35% 25% at 95% 40%,rgba(241,187,242,.09),transparent 70%),
+             radial-gradient(40% 30% at 10% 100%,rgba(107,239,183,.10),transparent 70%);
+  animation:drift 18s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(4%,3%) scale(1.06)}}
+
+.stage{position:absolute;inset:0;z-index:1}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;padding:22px 20px 28px;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen>*{flex-shrink:0}
+.screen.has-tabs{padding-bottom:112px}
+.enter-fwd{animation:inFwd .42s var(--ease) both}
+.enter-back{animation:inBack .42s var(--ease) both}
+.enter-fade{animation:fadeIn .32s ease both}
+.leave{animation:fadeOut .22s ease both;pointer-events:none}
+@keyframes inFwd{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:none}}
+@keyframes inBack{from{opacity:0;transform:translateX(-36px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes fadeOut{to{opacity:0}}
+.stagger>*{animation:fadeIn .5s var(--ease) both}
+.stagger>*:nth-child(2){animation-delay:.05s}.stagger>*:nth-child(3){animation-delay:.1s}.stagger>*:nth-child(4){animation-delay:.15s}
+.stagger>*:nth-child(5){animation-delay:.2s}.stagger>*:nth-child(6){animation-delay:.25s}.stagger>*:nth-child(7){animation-delay:.3s}.stagger>*:nth-child(n+8){animation-delay:.35s}
+
+/* type */
+h1{margin:0;font-size:28px;line-height:1.25;font-weight:700;letter-spacing:-.3px;text-wrap:balance}
+h2{margin:0;font-size:20px;font-weight:700;letter-spacing:-.2px}
+p{margin:0}
+.lead{font-size:15px;line-height:1.55;color:var(--muted)}
+.small{font-size:13px;line-height:1.45;color:var(--muted)}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--faint)}
+.at{color:var(--lilac)}
+.num{font-variant-numeric:tabular-nums}
+
+/* components */
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 18px 40px rgba(0,0,0,.28);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;height:56px;border-radius:28px;border:0;font-size:16px;font-weight:600;width:100%;transition:transform .15s var(--ease),filter .2s,opacity .2s;text-decoration:none;color:var(--ink)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(135deg,#7A60DA,#4C3A8F);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 14px 34px rgba(118,92,214,.35)}
+.btn.ghost{background:var(--glass);border:1px solid var(--line)}
+.btn.mint{background:linear-gradient(135deg,#5BD9A3,#2E9E73);color:#06231A;box-shadow:0 14px 34px rgba(107,239,183,.22)}
+.btn[disabled]{opacity:.38;pointer-events:none}
+.btn.sm{height:44px;font-size:14px;border-radius:22px;width:auto;padding:0 18px}
+.iconbtn{width:44px;height:44px;border-radius:22px;display:flex;align-items:center;justify-content:center;background:var(--glass);border:1px solid var(--line);flex:none;position:relative}
+.iconbtn:active{transform:scale(.94)}
+.topbar{display:flex;align-items:center;gap:12px;min-height:44px}
+.topbar h2{flex:1}
+.spacer{flex:1}
+.stack{display:flex;flex-direction:column}
+.row{display:flex;align-items:center}
+.gap-4{gap:4px}.gap-8{gap:8px}.gap-12{gap:12px}.gap-16{gap:16px}.gap-20{gap:20px}.gap-24{gap:24px}
+.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}.mt-24{margin-top:24px}.mt-32{margin-top:32px}.mt-auto{margin-top:auto}
+.pill{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 12px;border-radius:15px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.pill.ok{background:rgba(107,239,183,.12);border:1px solid rgba(107,239,183,.4);color:var(--mint-t)}
+.pill.warn{background:rgba(255,158,174,.10);border:1px solid rgba(255,158,174,.4);color:var(--rose)}
+.pill.lilac{background:rgba(160,138,238,.16);border:1px solid rgba(185,166,250,.35);color:var(--lilac-2)}
+.pill.dim{background:var(--glass);border:1px solid var(--line);color:var(--muted)}
+.pill.soon{background:rgba(253,255,155,.08);border:1px solid rgba(253,255,155,.35);color:var(--yellow)}
+.field{display:flex;align-items:center;gap:10px;height:58px;border-radius:var(--r-md);padding:0 16px;background:var(--glass);border:1.5px solid var(--line);transition:border-color .2s,box-shadow .2s}
+.field:focus-within{border-color:var(--lilac);box-shadow:0 0 0 4px rgba(185,166,250,.14)}
+.field input{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;font-size:17px;font-weight:600}
+.field input::placeholder{color:var(--faint);font-weight:500}
+.label{font-size:11.5px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--faint)}
+.list{border-radius:var(--r-lg);padding:4px 16px}
+.li{display:flex;align-items:center;gap:14px;min-height:64px;border-bottom:1px solid rgba(255,255,255,.07);width:100%;background:none;border-left:0;border-right:0;border-top:0;text-align:left;padding:0}
+.li:last-child{border-bottom:0}
+.li .t{font-weight:600;font-size:15px}
+.li .s{font-size:12.5px;color:var(--muted);margin-top:2px}
+.coin{width:40px;height:40px;border-radius:20px;flex:none;object-fit:cover}
+.coin.sm{width:28px;height:28px}
+.avatar{width:40px;height:40px;border-radius:20px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;color:#17161B;font-size:16px;text-transform:uppercase}
+.fiocoin{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2a2440,#1b1928);border:1px solid rgba(185,166,250,.35)}
+.fiocoin img{height:60%}
+.chev{color:var(--faint);flex:none}
+.switch{appearance:none;-webkit-appearance:none;width:50px;height:30px;border-radius:15px;background:rgba(255,255,255,.16);position:relative;flex:none;cursor:pointer;transition:background .25s;margin:0}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:12px;background:#fff;transition:transform .25s var(--ease);box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.switch:checked{background:var(--purple)}
+.switch:checked::after{transform:translateX(20px)}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{display:flex;align-items:center;gap:8px;height:44px;padding:0 14px 0 8px;border-radius:22px;background:var(--glass);border:1px solid var(--line);font-size:14px;font-weight:600;white-space:nowrap;flex:none}
+.chip.txt{padding:0 16px}
+.chip[aria-pressed="true"]{background:rgba(118,92,214,.28);border-color:var(--lilac)}
+.divider{height:1px;background:rgba(255,255,255,.08)}
+.kv{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:50px;border-bottom:1px solid rgba(255,255,255,.07);font-size:14px}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--muted)}
+.kv span:last-child{font-weight:600;text-align:right}
+.handle{font-weight:700;letter-spacing:-.2px}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:5px;border-radius:18px;background:var(--glass);border:1px solid var(--line)}
+.seg button{height:42px;border-radius:14px;border:0;background:transparent;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:rgba(118,92,214,.4);color:#fff}
+
+/* tab bar */
+.tabbar{position:absolute;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));height:70px;border-radius:35px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:center;z-index:20;background:rgba(28,27,34,.82);border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 16px 40px rgba(0,0,0,.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;font-size:11px;font-weight:600;color:var(--faint);height:100%;transition:color .2s}
+.tab[aria-current="page"]{color:var(--lilac-2)}
+.tab .dot{width:4px;height:4px;border-radius:2px;background:var(--lilac);opacity:0;transition:opacity .2s}
+.tab[aria-current="page"] .dot{opacity:1}
+
+/* home */
+.handlebtn{display:flex;align-items:center;gap:10px;height:44px;padding:0 14px 0 6px;border-radius:22px;background:var(--glass);border:1px solid var(--line);font-size:16px}
+.handlebtn .mk{width:32px;height:32px;border-radius:16px}
+.balance{padding:22px 22px 20px;border-radius:30px;position:relative;overflow:hidden}
+.balance::after{content:"";position:absolute;width:220px;height:220px;right:-80px;top:-90px;border-radius:50%;background:radial-gradient(circle,rgba(185,166,250,.28),transparent 70%)}
+.big{font-size:40px;font-weight:700;letter-spacing:-1px;line-height:1.1}
+.big .cents{color:rgba(255,255,255,.5)}
+.actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.act{display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:0;font-size:12.5px;font-weight:600;padding:0}
+.act span.c{width:58px;height:58px;border-radius:29px;display:flex;align-items:center;justify-content:center;background:var(--glass);border:1px solid var(--line);transition:transform .15s var(--ease)}
+.act:active span.c{transform:scale(.92)}
+.act.primary span.c{background:linear-gradient(135deg,#7A60DA,#4C3A8F);border:0;box-shadow:0 10px 24px rgba(118,92,214,.35)}
+.banner{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:20px;background:rgba(107,239,183,.09);border:1px solid rgba(107,239,183,.32);width:100%;text-align:left}
+.promo{position:relative;overflow:hidden;padding:20px;border-radius:26px;background:linear-gradient(135deg,rgba(118,92,214,.36),rgba(76,58,143,.18) 60%,rgba(241,187,242,.12));border:1px solid rgba(185,166,250,.35)}
+.promo .glyph{position:absolute;right:-6px;top:-18px;font-size:110px;font-weight:800;color:rgba(255,255,255,.07);letter-spacing:-4px}
+.badgecount{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--mint);color:#06231A;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)}
+
+/* sheets */
+.scrim{position:absolute;inset:0;z-index:40;background:rgba(6,5,10,.55);backdrop-filter:blur(4px);animation:fadeIn .25s ease both}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:41;max-height:88%;overflow-y:auto;padding:12px 20px calc(24px + env(safe-area-inset-bottom,0px));border-radius:32px 32px 0 0;background:#1C1A23;border-top:1px solid var(--line-2);box-shadow:0 -20px 60px rgba(0,0,0,.5);animation:sheetUp .42s var(--ease) both}
+.sheet.closing{animation:sheetDown .26s ease both}
+.scrim.closing{animation:fadeOut .26s ease both}
+.grab{width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,.22);margin:0 auto 16px}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes sheetDown{to{transform:translateY(100%)}}
+
+/* face id */
+.fid{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:rgba(10,9,14,.6);backdrop-filter:blur(10px);animation:fadeIn .2s ease both}
+.fid-box{width:120px;height:120px;border-radius:30px;background:rgba(28,26,35,.92);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.fid-box .scan{position:absolute;left:14px;right:14px;height:2px;background:linear-gradient(90deg,transparent,var(--lilac),transparent);top:20%;animation:scan .9s ease-in-out infinite alternate}
+@keyframes scan{to{top:78%}}
+.fid-box .ok{position:absolute;opacity:0;transform:scale(.6);transition:all .3s var(--ease)}
+.fid.done .ok{opacity:1;transform:none}
+.fid.done .face,.fid.done .scan{opacity:0;transition:opacity .2s}
+.fid p{font-weight:600}
+
+/* success */
+.burst{position:relative;width:190px;height:190px;display:flex;align-items:center;justify-content:center;margin:0 auto}
+.burst .ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(107,239,183,.35);animation:ripple 1.6s ease-out .2s both}
+.burst .ring.r2{inset:24px;border-color:rgba(107,239,183,.55);animation-delay:.05s}
+@keyframes ripple{from{transform:scale(.6);opacity:0}40%{opacity:1}to{transform:scale(1);opacity:1}}
+.burst .core{width:112px;height:112px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--glass);border:1px solid var(--line-2);box-shadow:0 0 50px rgba(107,239,183,.28);animation:pop .5s var(--ease) both}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.draw path{stroke-dasharray:30;stroke-dashoffset:30;animation:draw .5s ease .35s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+canvas.confetti{position:absolute;inset:0;z-index:30;pointer-events:none}
+
+/* splash */
+.splash{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
+.rings{position:absolute;left:50%;top:44%;width:0;height:0}
+.rings i{position:absolute;border-radius:50%;border:1px solid rgba(185,166,250,.14);left:50%;top:50%;transform:translate(-50%,-50%);animation:breathe 4s ease-in-out infinite}
+.rings i:nth-child(1){width:300px;height:300px}
+.rings i:nth-child(2){width:440px;height:440px;animation-delay:.6s;border-color:rgba(185,166,250,.09)}
+.rings i:nth-child(3){width:600px;height:600px;animation-delay:1.2s;border-color:rgba(185,166,250,.05)}
+@keyframes breathe{50%{transform:translate(-50%,-50%) scale(1.04)}}
+.sp-stage{position:relative;margin-top:-80px;display:flex;flex-direction:column;align-items:center;gap:26px}
+.sp-pill{position:relative;width:340px;max-width:calc(100vw - 32px);height:56px;border-radius:28px;display:flex;align-items:center;justify-content:center;background:var(--glass);border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 20px 50px rgba(0,0,0,.4);transition:width .7s var(--ease),height .6s var(--ease),border-radius .6s var(--ease),box-shadow .6s;opacity:0;transform:scale(.92);animation:pop .6s var(--ease) .15s forwards}
+.sp-pill.h{width:270px;height:66px;border-radius:33px;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 50px rgba(160,138,238,.35)}
+.sp-pill.logo{width:230px;height:100px;border-radius:50px;box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 70px rgba(160,138,238,.45),0 24px 50px rgba(0,0,0,.45)}
+#spText{font-size:11.5px;font-weight:600;letter-spacing:.4px;color:var(--muted);white-space:nowrap;transition:opacity .3s,font-size .4s}
+.sp-pill.h #spText{font-size:24px;font-weight:700;letter-spacing:-.3px;color:#fff}
+.sp-pill.logo #spText{opacity:0}
+#spLogo{position:absolute;height:54px;opacity:0;transform:scale(.8);transition:opacity .5s ease .1s,transform .6s var(--ease) .1s}
+.sp-pill.logo #spLogo{opacity:1;transform:none}
+.sp-tag{font-size:22px;font-weight:700;opacity:0;transform:translateY(10px);transition:all .6s var(--ease)}
+.sp-foot{position:absolute;left:24px;right:24px;bottom:calc(36px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:12px;opacity:0;transform:translateY(16px);transition:all .6s var(--ease)}
+.splash.done .sp-tag,.splash.done .sp-foot{opacity:1;transform:none}
+
+.k2{position:absolute;inset:0}
+.k2-pill{position:absolute;left:50%;top:42%;border-radius:32px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 46px rgba(160,138,238,.42)}
+.k2-row{position:absolute;left:0;right:0;top:42%;height:44px;margin-top:-22px;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-size:24px;font-weight:700;letter-spacing:-.4px;pointer-events:none}
+.k2-logo{position:absolute;left:50%;top:42%;height:58px;transform:translate(-50%,-50%)}
+.k2-tag{position:absolute;left:0;right:0;top:calc(42% + 84px);margin:0;text-align:center;font-size:22px;font-weight:700}
+.stickybar{position:sticky;bottom:-28px;margin:20px -20px -28px;padding:16px 20px calc(28px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--bg) 72%,rgba(18,17,23,0));z-index:5}
+/* misc */
+.addr2handle{padding:26px 18px;border-radius:30px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.addrchip{height:48px;padding:0 22px;border-radius:24px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:clamp(13px,4.2vw,16px);font-weight:600;letter-spacing:.2px;color:var(--muted);max-width:100%;box-sizing:border-box;white-space:nowrap}
+.handlechip{height:60px;padding:0 26px;border-radius:30px;display:flex;align-items:center;background:var(--glass-2);border:1px solid var(--line-2);font-size:24px;animation:glow 2.6s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 44px rgba(160,138,238,.45)}}
+.bob{animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(5px)}}
+.toast{position:absolute;left:50%;bottom:calc(100px + env(safe-area-inset-bottom,0px));z-index:80;transform:translateX(-50%);padding:12px 18px;border-radius:22px;background:rgba(40,38,48,.96);border:1px solid var(--line-2);font-size:14px;font-weight:600;white-space:nowrap;box-shadow:0 14px 34px rgba(0,0,0,.45);animation:toast 2.2s var(--ease) both;display:flex;align-items:center;gap:8px}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,12px)}12%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,6px)}}
+.spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.2);border-top-color:var(--lilac);animation:spin .7s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.shimmer{background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.12),rgba(255,255,255,.04));background-size:200% 100%;animation:sh 1s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+.steps .st{display:flex;align-items:center;gap:12px;min-height:44px;font-weight:600;font-size:15px;color:var(--faint);transition:color .3s}
+.steps .st.on{color:#fff}
+.steps .st .ic{width:26px;height:26px;border-radius:13px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--line-2);flex:none}
+.steps .st.done .ic{background:var(--mint);border-color:var(--mint)}
+.nft{position:relative;border-radius:30px;padding:22px;min-height:200px;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;
+  background:radial-gradient(120% 90% at 0% 0%,rgba(185,166,250,.55),transparent 55%),radial-gradient(90% 80% at 100% 100%,rgba(107,239,183,.30),transparent 60%),radial-gradient(70% 70% at 100% 0%,rgba(241,187,242,.35),transparent 60%),#221E33;
+  border:1px solid rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 24px 60px rgba(76,58,143,.45)}
+.nft::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.18) 50%,transparent 65%);background-size:250% 100%;animation:sheen 3.5s ease-in-out infinite}
+@keyframes sheen{from{background-position:150% 0}to{background-position:-100% 0}}
+.nft .dn{font-size:44px;font-weight:800;letter-spacing:-1.5px}
+.reveal{animation:reveal .9s var(--ease) both}
+@keyframes reveal{from{opacity:0;transform:perspective(800px) rotateY(-35deg) scale(.85)}to{opacity:1;transform:none}}
+.qr{width:200px;height:200px;border-radius:22px;background:#fff;padding:14px;display:block;margin:0 auto}
+.seedgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;transition:filter .4s}
+.seedgrid.blur{filter:blur(6px)}
+.seedgrid div{height:36px;border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;gap:6px;padding:0 10px;font-size:12.5px;font-weight:600}
+.seedgrid div b{color:var(--faint);font-weight:600;font-size:11px}
+.opt{display:flex;align-items:center;gap:14px;padding:16px;border-radius:22px;background:var(--glass);border:1.5px solid var(--line);width:100%;text-align:left;transition:border-color .2s,background .2s}
+.opt[aria-pressed="true"]{border-color:var(--lilac);background:rgba(118,92,214,.16)}
+.opt .ico{width:46px;height:46px;border-radius:15px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);color:var(--lilac-2)}
+.radio{width:22px;height:22px;border-radius:11px;border:2px solid var(--line-2);flex:none;display:flex;align-items:center;justify-content:center}
+[aria-pressed="true"] .radio{border-color:var(--lilac)}
+[aria-pressed="true"] .radio::after{content:"";width:10px;height:10px;border-radius:5px;background:var(--lilac)}
+.amount-in{width:2ch;min-width:1.2ch;border:0;outline:0;background:transparent;font-size:46px;font-weight:700;text-align:center;letter-spacing:-1px}
+.amount-in::placeholder{color:rgba(255,255,255,.25)}
+.walletgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.wcard{padding:14px;border-radius:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.wcard .lg{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#121117}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+
+<div class="device" id="device">
+  <div class="mesh" aria-hidden="true"></div>
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+(()=>{
+const IMG = %%IMGS%%;
+const $ = (s, r=document) => r.querySelector(s);
+const stage = $('#stage'), device = $('#device');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const usd = n => '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const amt = (n, d=6) => Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FIO_PX = 0.20, DOMAIN_FEE = 200, HANDLE_FEE = 10;
+
+/* ---------- icons ---------- */
+const I = {
+  back:'<path d="M15 18 9 12l6-6"/>', chev:'<path d="m9 6 6 6-6 6"/>', send:'<path d="M7 17 17 7"/><path d="M9 7h8v8"/>',
+  recv:'<path d="M17 7 7 17"/><path d="M15 17H7V9"/>', req:'<path d="M4 6h16v10h-7l-5 4v-4H4z"/><path d="M12 8.5v5M9.5 11h5"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>',
+  bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>', copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/>',
+  wallet:'<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h1"/>', act:'<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',
+  check:'<path d="M5 12.5 9.5 17 19 7.5"/>', checkc:'<circle cx="12" cy="12" r="10"/><path d="m7.5 12.5 3 3 6-6.5"/>',
+  lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  face:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M9 10v.5M15 10v.5M9 15.5c1.5 1.3 4.5 1.3 6 0"/>',
+  eye:'<path d="M2 12c3-6 17-6 20 0-3 6-17 6-20 0z"/><circle cx="12" cy="12" r="3"/>', plus:'<path d="M12 5v14M5 12h14"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>', shield:'<path d="M12 3 20 6v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/>',
+  at:'<circle cx="12" cy="12" r="4"/><path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3.5 7.1"/>', link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  layers:'<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>', refresh:'<path d="M20 12a8 8 0 1 1-2.3-5.7L20 8"/><path d="M20 3v5h-5"/>',
+  down:'<path d="M12 4v15M6 13l6 6 6-6"/>', arrow:'<path d="M4 12h15M13 6l6 6-6 6"/>',
+  share:'<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>', swap:'<path d="M7 4 3 8l4 4"/><path d="M3 8h14"/><path d="m17 20 4-4-4-4"/><path d="M21 16H7"/>',
+  card:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h4"/>', key:'<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+  bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>', trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>', qr:'<rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2"/>'
+};
+const ic = (n, sz=20, sw=2, col='currentColor') => `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+
+/* ---------- demo data ---------- */
+const CHAINS = [
+  {id:'btc', name:'Bitcoin', code:'BTC', img:'btc', addr:'bc1q8a4h0x2…n7x2k'},
+  {id:'eth', name:'Ethereum', code:'ETH', img:'eth', addr:'0x7850…cF4B'},
+  {id:'sol', name:'Solana', code:'SOL', img:'sol', addr:'7Hk3w…pQ9a'},
+  {id:'base', name:'Base', code:'BASE', img:null, color:'#2F6BFF', addr:'0x7850…cF4B'},
+  {id:'pol', name:'Polygon', code:'POL', img:'pol', addr:'0x7850…cF4B'},
+  {id:'bnb', name:'BNB Chain', code:'BNB', img:'bnb', addr:'0x7850…cF4B'},
+  {id:'trx', name:'Tron', code:'TRX', img:'trx', addr:'TQ7b…9mWe'},
+  {id:'fio', name:'FIO Chain', code:'FIO', img:'fio', addr:'FIO6x…4Ks2'}
+];
+const ASSETS0 = [
+  {id:'eth', sym:'ETH', name:'Ethereum', net:'Ethereum', bal:0.62, px:3194.20, img:'eth', dec:4},
+  {id:'usdt',sym:'USDT',name:'Tether', net:'Ethereum', bal:1250, px:1, img:'usdt', dec:2},
+  {id:'sol', sym:'SOL', name:'Solana', net:'Solana', bal:4.8, px:150.06, img:'sol', dec:3},
+  {id:'btc', sym:'BTC', name:'Bitcoin', net:'Bitcoin', bal:0.0052, px:63461.54, img:'btc', dec:5},
+  {id:'fio', sym:'FIO', name:'FIO', net:'FIO Chain', bal:1200, px:FIO_PX, img:'fio', dec:2},
+  {id:'bnb', sym:'BNB', name:'BNB', net:'BNB Chain', bal:0.35, px:580, img:'bnb', dec:3},
+  {id:'pol', sym:'POL', name:'Polygon', net:'Polygon', bal:220, px:0.40, img:'pol', dec:2}
+];
+const CONTACTS = [
+  {h:'alice@web3', c:'linear-gradient(135deg,#F1BBF2,#A08AEE)'},
+  {h:'bob@web3', c:'linear-gradient(135deg,#6BEFB7,#A08AEE)'},
+  {h:'maya@edge', c:'linear-gradient(135deg,#FDFF9B,#6BEFB7)'},
+  {h:'ravi@ibw', c:'linear-gradient(135deg,#A08AEE,#F1BBF2)'}
+];
+const TAKEN_H = ['alice','bob','satoshi','vitalik','admin','fio','test'];
+const TAKEN_D = ['web3','crypto','edge','opera','trust','fio','bitcoin','eth','nft','wallet','dao'];
+const WALLETS = [
+  {n:'Trust Wallet', d:'FIO is the default handle provider', c:'#6BA6FF'},
+  {n:'Edge Wallet', d:'Handles, requests & staking', c:'#6BEFB7'},
+  {n:'Opera Wallet', d:'Default handle provider', c:'#FF8A9A'},
+  {n:'MetaMask', d:'Handle resolution via FIO Snap', c:'#FFB36B'},
+  {n:'Binance', d:'FIO-enabled app', c:'#FDFF9B'},
+  {n:'Cake Wallet', d:'FIO Send', c:'#9FD3FF'},
+  {n:'Zelcore', d:'FIO Protocol integration', c:'#B9A6FA'},
+  {n:'Infinity Wallet', d:'FIO Protocol integration', c:'#8FF5C9'},
+  {n:'SecuX', d:'Hardware wallet partner', c:'#D6CBFF'},
+  {n:'Coinplus', d:'NFC cold-wallet cards', c:'#F1BBF2'},
+  {n:'QBIT Wallet', d:'FIO Send & Receive', c:'#6BEFB7'},
+  {n:'Pillar', d:'FIO on Android & iOS', c:'#FFB36B'}
+];
+
+let S;
+function freshState(){
+  return {
+    handle:'', domain:'web3', primary:null, secure:'passkey', seedShown:false,
+    linked:{btc:true, eth:true, sol:true, base:true, pol:true, bnb:false, trx:false, fio:true},
+    assets: ASSETS0.map(a=>({...a})),
+    activity:[
+      {id:1, kind:'in', who:'maya@edge', sym:'USDT', amount:250, memo:'Design invoice #12', when:'Yesterday', net:'Ethereum'},
+      {id:2, kind:'out', who:'alice@web3', sym:'ETH', amount:0.1, memo:'Concert tickets', when:'Oct 24', net:'Ethereum'},
+      {id:3, kind:'in', who:'bob@web3', sym:'SOL', amount:1.2, memo:'Lunch', when:'Oct 20', net:'Solana'}
+    ],
+    incoming:[{id:'r1', who:'bob@web3', sym:'USDT', amount:50, memo:'Dinner split', net:'Ethereum', addr:'0x9B1c…44E0'}],
+    domains:[], // {name, public, expires, handles:[{name, owner}], wrapped}
+    extraHandles:[],
+    faceId:true, counted:false,
+    send:{to:'', asset:'eth', amount:'', memo:''}, req:{from:'', asset:'usdt', amount:'', memo:''},
+    dom:{q:'', term:1, pay:'fio'}, filter:'all', nextId:10
+  };
+}
+S = freshState();
+const myHandle = () => S.primary || (S.handle ? `${S.handle}@${S.domain}` : 'yourname@web3');
+const asset = id => S.assets.find(a=>a.id===id);
+const total = () => S.assets.reduce((t,a)=>t+a.bal*a.px,0);
+const coinImg = (id, cls='coin', st='') => {
+  if (id==='fio') return `<span class="${cls} fiocoin" style="${st}"><img src="${IMG.fmark}" alt=""></span>`;
+  if (id==='base') return `<span class="${cls}" style="background:#2F6BFF;display:flex;align-items:center;justify-content:center;${st}"><span style="width:44%;height:44%;border-radius:50%;background:#fff;display:block"></span></span>`;
+  return `<img class="${cls}" src="${IMG[id]}" alt="" style="${st}">`;
+};
+const avatarFor = (h, sz=40) => { const c = CONTACTS.find(x=>x.h===h); return `<span class="avatar" style="width:${sz}px;height:${sz}px;border-radius:${sz/2}px;font-size:${Math.round(sz*.42)}px;background:${c?c.c:'linear-gradient(135deg,#B9A6FA,#765CD6)'}">${esc(h[0]||'?')}</span>`; };
+const hh = h => { const i = h.indexOf('@'); return i<0 ? esc(h) : `${esc(h.slice(0,i))}<span class="at">${esc(h.slice(i))}</span>`; };
+const fakeAddr = (h, chain) => { let x=0; for (const ch of h+chain) x=(x*31+ch.charCodeAt(0))>>>0; const hex=x.toString(16).padStart(8,'0');
+  if (chain==='btc') return `bc1q${hex.slice(0,4)}…${hex.slice(4)}`; if (chain==='sol') return `${hex.slice(0,4).toUpperCase()}k…${hex.slice(4,8)}`; if (chain==='trx') return `T${hex.slice(0,4)}…${hex.slice(4)}`; return `0x${hex.slice(0,4)}…${hex.slice(4,8)}`; };
+const chainOfAsset = id => ({eth:'eth',usdt:'eth',sol:'sol',btc:'btc',fio:'fio',bnb:'bnb',pol:'pol'})[id];
+
+/* ---------- router ---------- */
+let cur = null, hist = [], tabScreens = ['home','activity','domains','settings'];
+function go(name, opts={}){
+  const dir = opts.dir || (tabScreens.includes(name) && tabScreens.includes(cur?.name) ? 'fade' : 'fwd');
+  if (!opts.noHist && cur && !opts.replace) hist.push(cur);
+  closeSheet(true);
+  const old = stage.querySelector('.screen:not(.leave)');
+  const el = document.createElement('div');
+  const def = SCREENS[name];
+  el.className = 'screen' + (def.tabs ? ' has-tabs' : '') + ' enter-' + dir;
+  el.dataset.name = name;
+  el.innerHTML = def.html(opts.arg);
+  stage.appendChild(el);
+  if (old){ old.classList.add('leave'); setTimeout(()=>old.remove(), 240); }
+  stage.querySelectorAll('.tabbar').forEach(t=>t.remove());
+  if (def.tabs){ const tb = document.createElement('nav'); tb.className='tabbar'; tb.setAttribute('aria-label','Main'); tb.innerHTML = tabbar(def.tabs); stage.appendChild(tb); }
+  cur = {name, arg:opts.arg};
+  if (def.after) def.after(el, opts.arg);
+  el.scrollTop = 0;
+}
+function back(){ const p = hist.pop(); if (!p) return go('home',{noHist:true,dir:'back'}); go(p.name,{arg:p.arg,noHist:true,dir:'back'}); }
+function refresh(){ if (!cur) return; const el = stage.querySelector('.screen:not(.leave)'); const st = el.scrollTop; const def = SCREENS[cur.name]; el.innerHTML = def.html(cur.arg); el.classList.remove('enter-fwd','enter-back','enter-fade'); el.querySelectorAll('.stagger').forEach(s=>s.classList.remove('stagger')); if (def.after) def.after(el, cur.arg, true); el.scrollTop = st; }
+const tabbar = active => [['home','Wallet','wallet'],['activity','Activity','act'],['domains','Domains','globe'],['settings','Settings','gear']]
+  .map(([k,l,i])=>`<button class="tab" data-tab="${k}" ${k===active?'aria-current="page"':''}>${ic(i,22)}${l}<span class="dot"></span></button>`).join('');
+const topbar = (title, extra='') => `<div class="topbar"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back')}</button><h2>${title}</h2>${extra}</div>`;
+
+/* ---------- overlays ---------- */
+let sheetEl = null, scrimEl = null;
+function openSheet(html, after){
+  closeSheet(true);
+  scrimEl = document.createElement('div'); scrimEl.className='scrim'; scrimEl.dataset.act='closeSheet';
+  sheetEl = document.createElement('div'); sheetEl.className='sheet'; sheetEl.setAttribute('role','dialog'); sheetEl.setAttribute('aria-modal','true');
+  sheetEl.innerHTML = '<div class="grab"></div>' + html;
+  stage.append(scrimEl, sheetEl);
+  if (after) after(sheetEl);
+}
+function closeSheet(now){
+  if (!sheetEl) return;
+  const s = sheetEl, c = scrimEl; sheetEl = scrimEl = null;
+  if (now){ s.remove(); c.remove(); return; }
+  s.classList.add('closing'); c.classList.add('closing'); setTimeout(()=>{s.remove(); c.remove();}, 260);
+}
+function toast(msg, icon='checkc'){
+  stage.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t = document.createElement('div'); t.className='toast'; t.setAttribute('role','status');
+  t.innerHTML = `${ic(icon,18,2.2,'#8FF5C9')}<span>${msg}</span>`; stage.appendChild(t); setTimeout(()=>t.remove(), 2300);
+}
+function faceId(label, cb){
+  if (!S.faceId){ cb(); return; }
+  const f = document.createElement('div'); f.className='fid'; f.setAttribute('role','status');
+  const mm = S.via==='mm';
+  f.innerHTML = `<div class="fid-box"><span class="face">${mm?`<img src="${IMG.metamask}" alt="" style="width:64px;height:64px">`:ic('face',58,1.6,'#D6CBFF')}</span><span class="scan"></span><span class="ok">${ic('checkc',62,1.8,'#6BEFB7')}</span></div><p>${mm?'Confirm in MetaMask':(label||'Face ID')}</p>`;
+  stage.appendChild(f);
+  setTimeout(()=>{ f.classList.add('done'); f.querySelector('p').textContent='Confirmed'; }, reduce?50:1100);
+  setTimeout(()=>{ f.remove(); cb(); }, reduce?120:1650);
+}
+function confetti(host=stage){
+  if (reduce) return;
+  const c = document.createElement('canvas'); c.className='confetti'; host.appendChild(c);
+  const w = c.width = host.clientWidth*2, h = c.height = host.clientHeight*2, x = c.getContext('2d');
+  const cols = ['#B9A6FA','#765CD6','#6BEFB7','#F1BBF2','#FDFF9B','#FFFFFF'];
+  const P = Array.from({length:120},()=>({x:w/2,y:h*0.32,vx:(Math.random()-.5)*28,vy:-Math.random()*26-6,r:Math.random()*10+6,c:cols[Math.random()*cols.length|0],a:Math.random()*6,va:(Math.random()-.5)*.3,sh:Math.random()<.5}));
+  let f=0; (function tick(){ x.clearRect(0,0,w,h); P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.9;p.vx*=.985;p.a+=p.va; x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;x.globalAlpha=Math.max(0,1-f/110);
+    if(p.sh){x.fillRect(-p.r/2,-p.r/4,p.r,p.r/2)}else{x.beginPath();x.arc(0,0,p.r/3,0,7);x.fill()} x.restore();}); if(++f<120) requestAnimationFrame(tick); else c.remove(); })();
+}
+function countUp(el, to){
+  if (!el) return;
+  const fmt = v => { const s = usd(v); const i = s.lastIndexOf('.'); return `${s.slice(0,i)}<span class="cents">${s.slice(i)}</span>`; };
+  if (reduce || S.counted){ el.innerHTML = fmt(to); return; }
+  S.counted = true; const t0 = performance.now(), d = 1100;
+  (function step(t){ const k = Math.min(1,(t-t0)/d), e = 1-Math.pow(1-k,3); el.innerHTML = fmt(to*e); if (k<1) requestAnimationFrame(step); })(t0);
+}
+function drawQR(canvas, text){
+  const n=29, ctx=canvas.getContext('2d'), size=canvas.width, m=size/n; ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size); ctx.fillStyle='#17161B';
+  let seed=0; for (const ch of text) seed=(seed*131+ch.charCodeAt(0))>>>0; const rnd=()=>{seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return (seed>>>0)/4294967296};
+  const finder=(x,y)=>{ctx.fillRect(x*m,y*m,7*m,7*m);ctx.fillStyle='#fff';ctx.fillRect((x+1)*m,(y+1)*m,5*m,5*m);ctx.fillStyle='#17161B';ctx.fillRect((x+2)*m,(y+2)*m,3*m,3*m)};
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){const inF=(x<8&&y<8)||(x>n-9&&y<8)||(x<8&&y>n-9)||(x>10&&x<18&&y>10&&y<18); if(!inF&&rnd()<.5){ctx.beginPath();ctx.roundRect(x*m+.6,y*m+.6,m-1.2,m-1.2,m*.3);ctx.fill()}}
+  finder(0,0);finder(n-7,0);finder(0,n-7);
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.roundRect(11*m,11*m,7*m,7*m,m*1.6);ctx.fill();
+  const im=new Image(); im.onload=()=>{const hgt=5*m, wd=hgt*im.width/im.height; ctx.drawImage(im,14.5*m-wd/2,12*m,wd,hgt)}; im.src=IMG.fmark;
+}
+
+/* ---------- screens ---------- */
+const SCREENS = {};
+
+SCREENS.splash = {
+  html:()=>`<div class="splash" id="splash">
+    <div class="rings" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="k2" id="k2" aria-label="FIO. Own your web3 identity" role="img"></div>
+    <div class="sp-foot"><button class="btn primary" data-go="welcome">Get started</button><button class="btn ghost" data-act="connectMM"><img src="${IMG.metamask}" alt="" style="width:30px;height:30px;margin-left:-6px">Connect with MetaMask</button><p class="eyebrow">Simple · Secure · Sovereign</p></div>
+  </div>`,
+  after(el){
+    const sp = $('#splash',el), st = $('#k2',el);
+    const ADDR = '0x78508ed850fC5D3A10', H1 = 'yourname', H2 = '@web3';
+    const k = 0.72; // overall speed: lower is faster
+    const ms = v => Math.round(v*k);
+    const an = (e, kf, o) => e.animate(kf, Object.assign({fill:'both', easing:'cubic-bezier(.2,.8,.2,1)'}, o));
+    const mk = (host, html) => { const t=document.createElement('div'); t.innerHTML=html.trim(); const n=t.firstChild; host.appendChild(n); return n; };
+    const EIN='cubic-bezier(.11,0,.5,0)', EOUT='cubic-bezier(.5,1,.89,1)', IO='cubic-bezier(.65,0,.35,1)';
+    const box = (w,h) => ({width:w+'px',height:h+'px',marginLeft:-w/2+'px',marginTop:-h/2+'px',borderRadius:h/2+'px'});
+    const row = () => mk(st, `<div class="k2-row"></div>`);
+    const span = (els) => els[els.length-1].offsetLeft + els[els.length-1].offsetWidth - els[0].offsetLeft;
+    const chars = (r, txt, lil, maxW) => { const out=[...txt].map((ch,i)=>mk(r, `<span style="display:inline-block;${lil>=0&&i>=lil?'color:var(--lilac)':''}">${ch}</span>`));
+      const w = span(out); if (w>maxW) r.style.fontSize=(24*maxW/w).toFixed(2)+'px'; return out; };
+    const dxs = (r, els) => { const c=r.clientWidth/2; return els.map(e=>c-(e.offsetLeft+e.offsetWidth/2)); };
+    const path = (dx, inward) => { const out=[], q=Math.min(.9,10/Math.max(1,Math.abs(dx))); for (let j=0;j<=8;j++){ const p=j/8;
+      out.push(inward ? {offset:p, transform:`translateX(${dx*p}px)`, opacity:p<=1-q?1:Math.max(0,(1-p)/q)} : {offset:p, transform:`translateX(${dx*(1-p)}px)`, opacity:p>=q?1:p/q}); } return out; };
+    let started = false, finished = false, tm;
+    const finish = () => { finished = true; clearTimeout(tm); st.getAnimations({subtree:true}).forEach(x=>x.finish()); sp.classList.add('done'); };
+    sp.addEventListener('click', e=>{ if (!e.target.closest('button')){ if (!started) start(); finish(); } });
+    const start = () => { if (started) return; started = true;
+      // 1. address bar, sized to the address once the real font is in
+      const r = row(); r.style.color='rgba(255,255,255,.78)';
+      const cs = chars(r, ADDR, -1, Math.min(268, st.clientWidth-80));
+      const W0 = Math.round(span(cs) + 44);
+      const bar = mk(st, `<div class="k2-pill" style="width:${W0}px;height:64px;margin:-32px 0 0 ${-W0/2}px"></div>`); st.insertBefore(bar, r);
+      an(bar,[{opacity:0},{opacity:1}],{duration:ms(450),delay:ms(120)}); an(r,[{opacity:0},{opacity:1}],{duration:ms(450),delay:ms(120)});
+      // 2. both halves slide into the center while the bar closes into a drop
+      const T=ms(650), D=ms(700), dx=dxs(r,cs), mx=Math.max(...dx.map(Math.abs));
+      cs.forEach((c,i)=>an(c, path(dx[i],true), {duration:D*Math.sqrt(Math.abs(dx[i])/mx)+ms(40), delay:T, easing:EIN}));
+      const hit = T+D+ms(40);
+      an(bar,[box(W0,64),box(64,64)],{duration:D+ms(40),delay:T,easing:EIN});
+      an(bar,[{background:'rgba(255,255,255,.08)'},{background:'radial-gradient(circle,rgba(214,203,255,.55),rgba(118,92,214,.25) 70%)',offset:.5},{background:'rgba(255,255,255,.08)'}],{duration:ms(800),delay:hit-ms(320),easing:'ease-in-out',fill:'forwards'});
+      // 3. the drop stretches into the handle, letters slide out of the center
+      const r2 = row(); const hs = chars(r2, H1+H2, H1.length, Math.min(236, st.clientWidth-100)), W1 = Math.round(span(hs) + 46);
+      const hx = dxs(r2,hs), hm = Math.max(...hx.map(Math.abs));
+      an(bar,[box(64,64),box(W1,64)],{duration:ms(650),delay:hit,easing:EOUT,fill:'forwards'});
+      hs.forEach((c,i)=>{ const d=ms(620)*Math.sqrt(Math.abs(hx[i])/hm)+ms(40); an(c, path(hx[i],false), {duration:d, delay:hit+(ms(660)-d), easing:EOUT}); });
+      // 4. handle pill morphs into the logo pill
+      const M = hit+ms(950);
+      an(bar,[box(W1,64),box(236,104)],{duration:ms(760),delay:M,easing:IO,fill:'forwards'});
+      an(bar,[{boxShadow:'inset 0 1px 0 rgba(255,255,255,.16),0 0 46px rgba(160,138,238,.42)'},{boxShadow:'inset 0 1px 0 rgba(255,255,255,.2),0 0 80px rgba(160,138,238,.6)',offset:.5},{boxShadow:'inset 0 1px 0 rgba(255,255,255,.16),0 0 60px rgba(160,138,238,.35),0 24px 50px rgba(0,0,0,.45)'}],{duration:ms(900),delay:M,easing:'ease-in-out',fill:'forwards'});
+      an(r2,[{opacity:1,transform:'none',filter:'blur(0)'},{opacity:0,transform:'scale(.9)',filter:'blur(5px)'}],{duration:ms(380),delay:M,easing:'ease-in',fill:'forwards'});
+      const lg = mk(st, `<img class="k2-logo" src="${IMG.lockup}" alt="">`);
+      an(lg,[{opacity:0,transform:'translate(-50%,-50%) scale(.86)',filter:'blur(6px)'},{opacity:1,transform:'translate(-50%,-50%)',filter:'blur(0)'}],{duration:ms(620),delay:M+ms(260)});
+      const tl = mk(st, `<p class="k2-tag">Own your web3 identity</p>`);
+      an(tl,[{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:ms(700),delay:M+ms(520)});
+      tm = setTimeout(()=>sp.classList.add('done'), M+ms(900));
+      if (reduce || finished) finish();
+    };
+    // wait for Montserrat so the address is measured in the font it will be drawn in
+    const fontsIn = document.fonts && document.fonts.load ? Promise.all([document.fonts.load('700 24px Montserrat'), document.fonts.ready]) : Promise.resolve();
+    Promise.race([fontsIn, new Promise(r=>setTimeout(r,1200))]).then(start, start);
+  }
+};
+
+SCREENS.welcome = {
+  html:()=>`<div class="stack gap-20 stagger" style="flex:1">
+    <img src="${IMG.lockup}" alt="FIO" style="height:34px;width:auto;align-self:flex-start">
+    <div class="glass addr2handle">
+      <div class="addrchip">0x78508ed850fC5D3A10</div>
+      <span class="bob" style="color:var(--lilac)">${ic('down',26,2)}</span>
+      <div class="handlechip handle">yourname<span class="at">@web3</span></div>
+    </div>
+    <div class="stack gap-12"><h1>One name for every wallet</h1>
+      <p class="lead">A FIO Handle replaces long public addresses on every chain. It's an NFT you own, and it works across 100+ wallets, exchanges and apps.</p></div>
+    <div class="stack gap-12 mt-auto">
+      <button class="btn primary" data-go="claim">Create wallet &amp; free handle</button>
+      <button class="btn ghost" data-go="restore">I already have a wallet</button>
+    </div>
+  </div>`
+};
+
+SCREENS.restore = {
+  html:()=>`${topbar('Restore wallet')}
+  <div class="stack gap-16 mt-24 stagger" style="flex:1">
+    <p class="lead">Enter your FIO Handle and recovery phrase. This demo fills them in for you.</p>
+    <label class="label" for="rsH">FIO Handle</label>
+    <div class="field"><input id="rsH" value="ck@web3" autocomplete="off" spellcheck="false"></div>
+    <label class="label" for="rsP">Recovery phrase</label>
+    <textarea id="rsP" rows="3" class="glass" style="padding:16px;font-size:15px;line-height:1.5;border-radius:20px;resize:none;outline:0">orbit velvet canyon ripple amber sketch lunar harbor pixel meadow drift signal</textarea>
+    <button class="btn primary mt-auto" data-act="restore">Restore wallet</button>
+  </div>`
+};
+
+SCREENS.claim = {
+  html:()=>`<div class="topbar"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back')}</button><span class="small" style="flex:1;text-align:center;font-weight:600">Step 1 of ${S.via==='mm'?2:3}</span>${progress(1, S.via==='mm'?2:3)}</div>
+  ${S.via==='mm'?`<div class="pill ok mt-16" style="align-self:flex-start"><img src="${IMG.metamask}" alt="" style="width:18px;height:18px">MetaMask connected · 0x7850…cF4B</div>`:''}
+  <div class="stack gap-12 mt-24"><h1>Claim your handle</h1><p class="lead">Pick the name people will send crypto to. Handles on @web3 are free.</p></div>
+  <label class="label mt-24" for="hIn">Your name</label>
+  <div class="field mt-8" style="padding-right:6px"><input id="hIn" value="${esc(S.handle)}" placeholder="yourname" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="40">
+    <span class="pill lilac" style="height:44px;border-radius:14px;font-size:16px">@web3</span></div>
+  <div id="hStatus" class="mt-12" style="min-height:30px"></div>
+  <div class="glass mt-16" style="padding:20px" id="hCard">
+    <div class="row" style="justify-content:space-between"><span class="eyebrow">Preview</span><span class="pill ok">Free</span></div>
+    <div class="row gap-12 mt-16"><span class="avatar fiocoin" style="width:52px;height:52px;border-radius:26px"><img src="${IMG.fmark}" alt=""></span>
+      <div class="stack gap-4" style="min-width:0"><span class="handle" id="hPrev" style="font-size:22px;overflow:hidden;text-overflow:ellipsis">${hh((S.handle||'yourname')+'@web3')}</span><span class="small">NFT · Owned by you</span></div></div>
+    <p class="small mt-16">Want your own <span class="at">@domain</span>? You can get one right after setup.</p>
+  </div>
+  <button class="btn primary mt-auto" id="hGo" data-act="claimNext" style="margin-top:24px" disabled>Claim handle</button>`,
+  after(el){
+    const inp = $('#hIn',el), st=$('#hStatus',el), go=$('#hGo',el), pv=$('#hPrev',el); let t;
+    const check = () => {
+      const v = inp.value.toLowerCase().replace(/[^a-z0-9-]/g,''); if (v!==inp.value) inp.value=v; S.handle=v;
+      pv.innerHTML = hh((v||'yourname')+'@web3'); go.disabled = true; go.textContent = v?`Claim ${v}@web3`:'Claim handle'; clearTimeout(t);
+      if (!v){ st.innerHTML=''; return; }
+      if (v.length<2){ st.innerHTML=`<span class="pill warn">Use at least 2 characters</span>`; return; }
+      st.innerHTML = `<span class="pill dim"><span class="spinner"></span>Checking FIO Chain…</span>`;
+      t = setTimeout(()=>{ if (TAKEN_H.includes(v)){ st.innerHTML=`<span class="pill warn">${esc(v)}@web3 is taken. Try ${esc(v)}${(Math.random()*90+10|0)}</span>`; }
+        else { st.innerHTML=`<span class="pill ok">${ic('checkc',16,2.4)}${esc(v)}@web3 is available</span>`; go.disabled=false; } }, 650);
+    };
+    inp.addEventListener('input', check); if (S.handle) check(); setTimeout(()=>inp.focus({preventScroll:true}), 400);
+  }
+};
+const progress = (n, tot=3) => `<div class="row gap-4" aria-hidden="true">${[...Array(tot)].map((_,j)=>j+1).map(i=>`<span style="width:20px;height:4px;border-radius:2px;background:${i<=n?'var(--lilac)':'rgba(255,255,255,.18)'}"></span>`).join('')}</div>`;
+
+const SEED = ['orbit','velvet','canyon','ripple','amber','sketch','lunar','harbor','pixel','meadow','drift','signal'];
+SCREENS.secure = {
+  html:()=>`<div class="topbar"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back')}</button><span class="small" style="flex:1;text-align:center;font-weight:600">Step 2 of 3</span>${progress(2)}</div>
+  <div class="stack gap-12 mt-24"><h1>Secure your wallet</h1><p class="lead">Only you hold the keys to ${hh(myHandle())}. Choose how you'll sign in and approve payments.</p></div>
+  <div class="stack gap-12 mt-24">
+    <button class="opt" data-act="secure" data-v="passkey" aria-pressed="${S.secure==='passkey'}"><span class="ico">${ic('face',24)}</span><span class="stack gap-4" style="flex:1"><b style="font-size:16px">Passkey with Face ID</b><span class="small">Approve payments with your face. No phrase to lose.</span></span><span class="radio"></span></button>
+    <button class="opt" data-act="secure" data-v="phrase" aria-pressed="${S.secure==='phrase'}"><span class="ico">${ic('key',22)}</span><span class="stack gap-4" style="flex:1"><b style="font-size:16px">Recovery phrase</b><span class="small">12 words, written down and kept offline.</span></span><span class="radio"></span></button>
+  </div>
+  ${S.secure==='phrase'?`<div class="glass mt-16" style="padding:16px;position:relative">
+      <div class="seedgrid ${S.seedShown?'':'blur'}">${SEED.map((w,i)=>`<div><b>${i+1}</b>${w}</div>`).join('')}</div>
+      ${S.seedShown?'':`<button class="btn sm ghost" data-act="reveal" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(23,22,27,.85)">${ic('eye',18)}Tap to reveal</button>`}
+    </div>`:''}
+  <p class="small mt-16 row gap-8">${ic('shield',18,2,'#8FF5C9')}FIO never sees your keys and can't recover them for you.</p>
+  <button class="btn primary mt-auto" style="margin-top:24px" data-act="secureNext">${S.secure==='passkey'?'Set up Face ID':'I saved my phrase'}</button>`
+};
+
+SCREENS.link = {
+  html:(arg)=>`<div class="topbar"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back')}</button>${arg==='settings'?'<h2>Linked chains</h2>':`<span class="small" style="flex:1;text-align:center;font-weight:600">Step ${S.via==='mm'?'2 of 2':'3 of 3'}</span>${progress(S.via==='mm'?2:3, S.via==='mm'?2:3)}`}</div>
+  ${arg==='settings'?'':`<div class="stack gap-12 mt-24"><h1>Link your chains</h1></div>`}
+  <p class="lead mt-12">Anyone who pays ${hh(myHandle())} gets the right address on the right chain, automatically.</p>
+  <div class="glass list mt-20 stagger">${CHAINS.map(c=>`<label class="li" for="lk-${c.id}" style="cursor:pointer">${coinImg(c.img||c.id)}<span class="stack" style="flex:1;min-width:0"><span class="t">${c.name}</span><span class="s">${c.id==='fio'?'Required for your handle':esc(c.addr)}</span></span>
+    <input class="switch" type="checkbox" id="lk-${c.id}" data-link="${c.id}" ${S.linked[c.id]?'checked':''} ${c.id==='fio'?'disabled':''}></label>`).join('')}</div>
+  <p class="small mt-12 row gap-8">${ic('bolt',16,2,'#FDFF9B')}EVM chains share one address. FIO 2.0 brings EVM compatibility.</p>
+  ${arg==='settings'?'':`<button class="btn primary mt-auto" style="margin-top:24px" data-act="finishSetup">Create my wallet</button>`}`
+};
+
+SCREENS.creating = {
+  html:()=>`<div class="stack" style="flex:1;justify-content:center;gap:28px">
+    <div style="position:relative;width:120px;height:120px;margin:0 auto"><div class="spinner" style="width:120px;height:120px;border-width:3px"></div>
+      <span class="fiocoin" style="position:absolute;inset:22px;border-radius:50%"><img src="${IMG.fmark}" alt=""></span></div>
+    <h2 style="text-align:center">Setting up ${hh(myHandle())}</h2>
+    <div class="steps glass" style="padding:10px 20px" id="steps">
+      ${['Creating your keys','Registering handle on FIO Chain',`Linking ${Object.values(S.linked).filter(Boolean).length} chains`].map(t=>`<div class="st"><span class="ic">${ic('check',14,3,'#06231A')}</span>${t}</div>`).join('')}
+    </div></div>`,
+  after(el){ const st=[...el.querySelectorAll('.st')]; st.forEach((s,i)=>{ setTimeout(()=>s.classList.add('on'), i*700+100); setTimeout(()=>s.classList.add('done'), i*700+600); });
+    setTimeout(()=>go('ready',{replace:true}), reduce?300:2400); }
+};
+
+SCREENS.ready = {
+  html:()=>`<div class="stack" style="flex:1;gap:22px">
+    <div class="burst mt-16"><span class="ring"></span><span class="ring r2"></span><span class="core"><svg class="draw" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#6BEFB7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${I.check}</svg></span></div>
+    <div class="stack gap-8" style="text-align:center"><h1>Your wallet is ready</h1><p class="lead"><span class="handle" style="color:#fff">${hh(myHandle())}</span> is yours. Share it like an email address.</p></div>
+    <div class="promo stagger"><span class="glyph" aria-hidden="true">@</span>
+      <span class="pill lilac">Next step</span>
+      <h2 class="mt-12">Get your own domain</h2>
+      <p class="small mt-8" style="color:rgba(255,255,255,.8)">Own <span class="handle" style="color:#fff">@${esc(S.handle||'yourbrand')}</span> and issue handles like <span class="handle" style="color:#fff">pay@${esc(S.handle||'yourbrand')}</span> for your team or community.</p>
+      <button class="btn primary mt-16" data-act="domainFromReady">Find my domain</button>
+    </div>
+    <button class="btn ghost mt-auto" data-act="toHome">Go to wallet</button>
+  </div>`,
+  after(el){ setTimeout(()=>confetti(), 250); }
+};
+
+SCREENS.home = {
+  tabs:'home',
+  html:()=>{ const inc = S.incoming.length, d=S.domains[0];
+  return `<div class="row" style="justify-content:space-between">
+    <button class="handlebtn" data-act="copyHandle" aria-label="Copy ${esc(myHandle())}"><span class="mk fiocoin"><img src="${IMG.fmark}" alt=""></span><span class="handle">${hh(myHandle())}</span>${ic('copy',16,2,'rgba(255,255,255,.6)')}</button>
+    <button class="iconbtn" data-act="${inc?'openIncoming':'noNotes'}" aria-label="Notifications${inc?`, ${inc} new`:''}">${ic('bell')}${inc?`<span class="badgecount">${inc}</span>`:''}</button>
+  </div>
+  <div class="glass balance mt-16">
+    <span class="eyebrow">Total balance</span>
+    <div class="big num mt-12" id="bal"></div>
+    <div class="row gap-8 mt-12"><span class="pill ok" style="height:26px">+2.4% today</span><span class="small">${S.assets.length} assets · ${Object.values(S.linked).filter(Boolean).length} chains</span></div>
+  </div>
+  <div class="actions mt-20">
+    <button class="act primary" data-act="openSend"><span class="c">${ic('send',22)}</span>Send</button>
+    <button class="act" data-go="request"><span class="c">${ic('req',22)}</span>Request</button>
+    <button class="act" data-go="receive"><span class="c">${ic('recv',22)}</span>Receive</button>
+    <button class="act" data-tabgo="domains"><span class="c">${ic('globe',22)}</span>Domains</button>
+  </div>
+  ${inc?`<button class="banner mt-20" data-act="openIncoming">${avatarFor(S.incoming[0].who)}<span style="flex:1;font-size:14px;line-height:1.4"><b>${esc(S.incoming[0].who)}</b> requested <b>${amt(S.incoming[0].amount)} ${S.incoming[0].sym}</b><br><span class="small">${esc(S.incoming[0].memo)}</span></span><span style="font-weight:700;color:var(--mint-t);font-size:14px">Review</span></button>`:''}
+  ${d?`<button class="glass mt-16 row gap-12" data-act="openDomain" data-d="${esc(d.name)}" style="padding:14px 16px;width:100%;text-align:left;border-radius:22px"><span class="avatar" style="background:linear-gradient(135deg,#B9A6FA,#F1BBF2)">@</span><span style="flex:1"><b class="handle">@${esc(d.name)}</b><br><span class="small">${d.handles.length} handle${d.handles.length===1?'':'s'} · ${d.public?'Public':'Private'}${d.wrapped?' · On Polygon':''}</span></span>${ic('chev',18,2)}</button>`
+  :`<div class="promo mt-16"><span class="glyph" aria-hidden="true">@</span><span class="eyebrow" style="color:var(--lilac-2)">FIO Domains</span><h2 class="mt-8" style="font-size:18px">Get your own domain</h2><p class="small mt-8" style="color:rgba(255,255,255,.8);max-width:250px">Brand your handle as you@yourname, then issue handles to your team or community.</p><button class="btn sm primary mt-16" data-act="domainFromReady">Find a domain</button></div>`}
+  <div class="row mt-24" style="justify-content:space-between"><span class="eyebrow">Assets</span><span class="small">Demo balances</span></div>
+  <div class="stack mt-8 stagger">${S.assets.map(a=>`<button class="li" data-act="openAsset" data-a="${a.id}">${coinImg(a.img)}<span class="stack" style="flex:1;min-width:0"><span class="t">${a.name}</span><span class="s num">${amt(a.bal,a.dec)} ${a.sym} · ${a.net}</span></span><span class="t num">${usd(a.bal*a.px)}</span></button>`).join('')}</div>`; },
+  after(el){ countUp($('#bal',el), total()); }
+};
+
+function assetSheet(id){
+  const a = asset(id), ch = chainOfAsset(id), c = CHAINS.find(x=>x.id===ch);
+  openSheet(`<div class="stack gap-16" style="align-items:center;text-align:center">${coinImg(a.img,'coin','width:64px;height:64px;border-radius:32px')}
+    <div><div class="big num" style="font-size:32px">${amt(a.bal,a.dec)} ${a.sym}</div><p class="small mt-8 num">${usd(a.bal*a.px)} · 1 ${a.sym} = ${usd(a.px)}</p></div></div>
+    <div class="glass list mt-20" style="padding:2px 18px"><div class="kv"><span>Network</span><span>${a.net}</span></div><div class="kv"><span>Your address</span><span>${esc(c?c.addr:'')}</span></div><div class="kv"><span>Receive with</span><span class="handle">${hh(myHandle())}</span></div></div>
+    <div class="row gap-12 mt-20"><button class="btn primary" data-act="sendAsset" data-a="${a.id}">${ic('send')}Send</button><button class="btn ghost" data-act="recvAsset">${ic('recv')}Receive</button></div>`);
+}
+
+SCREENS.send = {
+  html:()=>`${topbar('Send')}
+  <label class="label mt-24" for="toIn">To</label>
+  <div class="field mt-8"><span id="toAv" style="display:flex">${ic('at',22,2,'rgba(255,255,255,.5)')}</span><input id="toIn" value="${esc(S.send.to)}" placeholder="name@domain or address" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+  <div id="toStatus" class="mt-12" style="min-height:30px"></div>
+  <div class="chips mt-8" aria-label="Recent">${CONTACTS.map(c=>`<button class="chip" data-act="pickTo" data-h="${c.h}"><span class="avatar" style="width:28px;height:28px;font-size:12px;background:${c.c}">${c.h[0]}</span>${hh(c.h)}</button>`).join('')}</div>
+  <span class="label mt-24">Asset</span>
+  <div class="chips mt-8" id="assetChips">${S.assets.map(a=>`<button class="chip" data-act="pickAsset" data-a="${a.id}" aria-pressed="${S.send.asset===a.id}">${coinImg(a.img,'coin sm')}${a.sym}</button>`).join('')}</div>
+  <div class="glass mt-16" style="padding:18px 18px 16px;text-align:center">
+    <label class="label" for="amtIn">Amount</label>
+    <div class="row" style="justify-content:center;gap:8px;margin-top:6px"><input class="amount-in num" id="amtIn" inputmode="decimal" placeholder="0" value="${esc(S.send.amount)}" style="max-width:220px"><span id="amtSym" style="font-size:24px;font-weight:700;color:var(--lilac)">${asset(S.send.asset).sym}</span></div>
+    <div class="row" style="justify-content:space-between;margin-top:8px"><span class="small num" id="amtUsd">≈ $0.00</span><button class="pill lilac" data-act="max" style="border:0">Max ${'<span id="amtBal" class="num">'+amt(asset(S.send.asset).bal,asset(S.send.asset).dec)+'</span>'}</button></div>
+  </div>
+  <label class="label mt-24 row gap-8" for="memoIn">Memo ${ic('lock',13,2.2)}</label>
+  <div class="field mt-8" style="height:52px"><input id="memoIn" value="${esc(S.send.memo)}" placeholder="What's it for?" maxlength="60" style="font-weight:500;font-size:15px"></div>
+  <p class="small mt-8">End-to-end encrypted with FIO Data. Only you and the recipient can read it.</p>
+  <button class="btn primary mt-auto" id="sendGo" data-act="reviewSend" style="margin-top:24px" disabled>Review</button>`,
+  after(el){ wireRecipient(el, 'send'); }
+};
+function resolveState(v){
+  if (!v) return {s:'empty'};
+  if (/^[a-z0-9-]+@[a-z0-9-]+$/.test(v)) return v===myHandle() ? {s:'self'} : {s:'ok'};
+  if (/^(0x[0-9a-f]{8,}|bc1[0-9a-z]{8,}|t[1-9a-z]{20,})$/i.test(v)) return {s:'raw'};
+  return {s:'typing'};
+}
+function wireRecipient(el, mode){
+  const D = mode==='send'?S.send:S.req; const inp=$('#toIn',el), st=$('#toStatus',el), av=$('#toAv',el), btn=$(mode==='send'?'#sendGo':'#reqGo',el);
+  const amtIn=$('#amtIn',el), memo=$('#memoIn',el); let t, resolved=false;
+  const validate = () => { const a=asset(D.asset), n=parseFloat(D.amount); const okAmt = n>0 && (mode!=='send' || n<=a.bal);
+    $('#amtUsd',el).textContent = `≈ ${usd((n||0)*a.px)}` + (mode==='send' && n>a.bal ? ' · more than your balance' : '');
+    btn.disabled = !(resolved && okAmt); };
+  const look = (instant) => {
+    const v = inp.value.trim().toLowerCase(); D.to=v; resolved=false; clearTimeout(t); validate();
+    const r = resolveState(v), chain = chainOfAsset(D.asset), cname = CHAINS.find(c=>c.id===chain).name;
+    if (r.s==='empty'||r.s==='typing'){ st.innerHTML = r.s==='typing'?`<span class="small">Type a full handle like name@domain</span>`:''; av.innerHTML=ic('at',22,2,'rgba(255,255,255,.5)'); return; }
+    if (r.s==='self'){ st.innerHTML=`<span class="pill warn">That's your own handle</span>`; return; }
+    if (r.s==='raw'){ st.innerHTML=`<span class="pill warn">${ic('shield',15,2.2)}Raw address. Double-check every character</span>`; resolved=true; validate(); return; }
+    st.innerHTML = `<span class="pill dim shimmer"><span class="spinner"></span>Looking up ${esc(v)} on FIO Chain…</span>`;
+    t = setTimeout(()=>{ resolved=true; av.innerHTML = avatarFor(v,32);
+      st.innerHTML = `<span class="pill ok" style="animation:pop .35s var(--ease)">${ic('checkc',16,2.4)}Resolved · ${fakeAddr(v,chain)} on ${cname}</span>`; validate(); }, instant?0:700);
+  };
+  inp.addEventListener('input', ()=>look());
+  amtIn.addEventListener('input', ()=>{ amtIn.value = amtIn.value.replace(/[^0-9.]/g,'').replace(/(\..*)\./g,'$1'); D.amount=amtIn.value; validate(); });
+  memo.addEventListener('input', ()=>D.memo=memo.value);
+  const fit = () => { amtIn.style.width = (Math.max(1, amtIn.value.length) + 0.4) + 'ch'; };
+  amtIn.addEventListener('input', fit); fit(); el._fit = fit;
+  el._look = look; el._validate = validate;
+  if (D.to) look(true); else validate();
+}
+
+function reviewSheet(){
+  const a = asset(S.send.asset), n = parseFloat(S.send.amount), chain = chainOfAsset(a.id), cname = CHAINS.find(c=>c.id===chain).name;
+  const raw = resolveState(S.send.to).s==='raw';
+  const fee = {eth:0.0004,usdt:0.0006,sol:0.00001,btc:0.00002,fio:0.3,bnb:0.0002,pol:0.01}[a.id];
+  const feeSym = a.id==='usdt'?'ETH':a.sym;
+  openSheet(`<h2 style="text-align:center">Review payment</h2>
+    <div style="text-align:center" class="mt-16"><div class="big num">${amt(n,a.dec)} <span class="at">${a.sym}</span></div><p class="small mt-8 num">≈ ${usd(n*a.px)}</p></div>
+    <div class="row gap-8 mt-16" style="justify-content:center;flex-wrap:wrap"><span class="pill dim handle" style="height:38px;font-size:14px;color:#fff">${hh(myHandle())}</span>${ic('arrow',18,2,'#B9A6FA')}<span class="pill lilac handle" style="height:38px;font-size:14px;color:#fff">${raw?esc(S.send.to.slice(0,10))+'…':hh(S.send.to)}</span></div>
+    <div class="glass list mt-20" style="padding:2px 18px">
+      <div class="kv"><span>Network</span><span>${cname}</span></div>
+      <div class="kv"><span>Address</span><span>${raw?esc(S.send.to.slice(0,6)+'…'+S.send.to.slice(-4)):fakeAddr(S.send.to,chain)}</span></div>
+      ${S.send.memo?`<div class="kv"><span>Memo</span><span>${esc(S.send.memo)} ${ic('lock',13,2.2,'#B9A6FA')}</span></div>`:''}
+      <div class="kv"><span>Network fee</span><span class="num">~${fee} ${feeSym}</span></div>
+    </div>
+    ${raw?'':`<p class="small mt-16 row gap-8">${ic('shield',18,2,'#8FF5C9')}Address looked up from ${esc(S.send.to)}. No copy-paste, no wrong network.</p>`}
+    <button class="btn primary mt-20" data-act="confirmSend">${ic('face',20)}Confirm with Face ID</button>`);
+}
+
+
+/* ---------- transaction confirmation ---------- */
+const FEES = {eth:0.0004, usdt:0.0006, sol:0.00001, btc:0.00002, fio:0.3, bnb:0.0002, pol:0.01};
+const ETA = {Ethereum:['~2 min','~30 sec','~15 sec'], Bitcoin:['~60 min','~30 min','~10 min'], Solana:['~2 sec','~1 sec','<1 sec'], 'FIO Chain':['~3 sec','~1 sec','<1 sec'], 'BNB Chain':['~15 sec','~6 sec','~3 sec'], Polygon:['~30 sec','~10 sec','~5 sec']};
+const SPEEDS = [['Slow',.75],['Market',1],['Fast',1.5]];
+const chainAddr = net => { const c = CHAINS.find(x=>x.name===net); return c ? c.addr : '0x7850…cF4B'; };
+const txHash = () => '0x' + [...Array(64)].map(()=>'0123456789abcdef'[Math.random()*16|0]).join('');
+function startTx(tx){ S.tx = Object.assign({speed:1, hash:txHash()}, tx); go('tx'); }
+const txFee = t => t.feeBase ? t.feeBase*SPEEDS[t.speed][1] : 0;
+SCREENS.tx = {
+  html:()=>{ const t=S.tx, fee=txFee(t), fa=asset(t.feeAsset||'fio'), feeUsd=fee*fa.px, amtUsd=t.usd!=null?t.usd:t.amount*t.px, eta=(ETA[t.net]||ETA['FIO Chain'])[t.speed];
+  return `<div class="topbar"><button class="iconbtn" data-act="txCancel" aria-label="Cancel transaction">${ic('x')}</button><h2>Confirm transaction</h2></div>
+  <div class="stack gap-8 mt-20" style="align-items:center;text-align:center">
+    <span class="pill dim">${t.title}</span>
+    <div class="row gap-12 mt-8">${coinImg(t.img,'coin','width:44px;height:44px;border-radius:22px')}<span class="big num">${t.out?'−':''}${amt(t.amount, t.dec||4)} <span class="at">${t.sym}</span></span></div>
+    <span class="small num">≈ ${usd(amtUsd)}</span>
+  </div>
+  <div class="glass mt-20" style="padding:16px 18px">
+    <div class="row gap-12"><span class="fiocoin" style="width:40px;height:40px;border-radius:20px;flex:none"><img src="${IMG.fmark}" alt=""></span>
+      <span class="stack" style="flex:1;min-width:0"><span class="small" style="font-size:11.5px;letter-spacing:1.4px;text-transform:uppercase">From</span><span class="handle" style="font-size:15px">${hh(t.from)}</span><span class="small num">${esc(t.fromAddr)}</span></span></div>
+    <div style="margin:8px 0 8px 19px;width:2px;height:18px;background:linear-gradient(var(--lilac),transparent)"></div>
+    <div class="row gap-12">${t.contract?`<span class="fiocoin" style="width:40px;height:40px;border-radius:20px;flex:none"><img src="${IMG.fmark}" alt=""></span>`:avatarFor(t.raw?'?':t.to)}
+      <span class="stack" style="flex:1;min-width:0"><span class="small" style="font-size:11.5px;letter-spacing:1.4px;text-transform:uppercase">To</span><span class="handle" style="font-size:15px;overflow:hidden;text-overflow:ellipsis">${t.raw?esc(t.to):hh(t.to)}</span><span class="small num">${esc(t.toAddr)}</span></span>
+      ${t.contract?`<span class="pill lilac" style="height:26px;font-size:11.5px">Contract</span>`:t.raw?`<span class="pill warn" style="height:26px;font-size:11.5px">Unverified</span>`:`<span class="pill ok" style="height:26px;font-size:11.5px">${ic('checkc',14,2.4)}FIO</span>`}</div>
+  </div>
+  ${t.feeBase?`<span class="label mt-20">Network fee</span>
+  <div class="seg mt-8" role="group" aria-label="Network fee speed">${SPEEDS.map(([l],i)=>`<button data-act="txSpeed" data-i="${i}" aria-pressed="${t.speed===i}" style="height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span>${l}</span><span style="font-size:11px;font-weight:500;opacity:.75">${(ETA[t.net]||ETA['FIO Chain'])[i]}</span></button>`).join('')}</div>`:''}
+  <div class="glass list mt-16" style="padding:2px 18px">
+    <div class="kv"><span>Network</span><span>${esc(t.net)}</span></div>
+    ${t.action?`<div class="kv"><span>Action</span><span>${t.action}</span></div>`:''}
+    <div class="kv"><span>Network fee</span><span class="num">${t.feeBase?`${+fee.toPrecision(2)} ${t.feeAsset==='usdt'?'ETH':fa.sym} <span class="small">≈ ${usd(feeUsd)}</span>`:'Included'}</span></div>
+    <div class="kv"><span>Estimated time</span><span>${eta}</span></div>
+    ${t.memo?`<div class="kv"><span>Memo</span><span>${esc(t.memo)} ${ic('lock',13,2.2,'#B9A6FA')}</span></div>`:''}
+    <div class="kv"><span style="color:#fff;font-weight:600">Total</span><span class="num" style="font-size:16px">${usd(amtUsd+feeUsd)}</span></div>
+  </div>
+  <p class="small mt-12 row gap-8" style="align-items:flex-start">${t.raw?ic('shield',18,2,'#FF9EAE'):ic('shield',18,2,'#8FF5C9')}<span>${t.raw?'This address isn\'t linked to a FIO Handle. Check every character before you approve.':t.contract?'This is a FIO Chain system action. Nothing leaves your wallet except the amount shown.':'Address looked up from '+esc(t.to)+' on the FIO Chain. Right address, right network.'}</span></p>
+  <div class="row gap-12 mt-auto stickybar"><button class="btn ghost" data-act="txCancel">Cancel</button><button class="btn primary" data-act="txApprove">${S.via==='mm'?`<img src="${IMG.metamask}" alt="" style="width:22px;height:22px">`:ic('face',20)}Approve</button></div>`; }
+};
+SCREENS.broadcast = {
+  html:()=>{ const t=S.tx; return `<div class="stack" style="flex:1;justify-content:center;gap:26px;text-align:center">
+    <div style="position:relative;width:110px;height:110px;margin:0 auto"><div class="spinner" style="width:110px;height:110px;border-width:3px"></div>
+      <span style="position:absolute;inset:22px;display:flex;align-items:center;justify-content:center">${coinImg(t.img,'coin','width:66px;height:66px;border-radius:33px')}</span></div>
+    <h2>Processing ${t.title.toLowerCase()}</h2>
+    <div class="steps glass" style="padding:10px 20px;text-align:left">${[S.via==='mm'?'Signed in MetaMask':'Signed with your key', 'Sent to '+t.net, 'Confirmed on '+t.net].map(x=>`<div class="st"><span class="ic">${ic('check',14,3,'#06231A')}</span>${x}</div>`).join('')}</div>
+    <p class="small num">Tx ${t.hash.slice(0,10)}…${t.hash.slice(-6)}</p></div>`; },
+  after(el){ const st=[...el.querySelectorAll('.st')]; st.forEach((s,i)=>{ setTimeout(()=>s.classList.add('on'), i*520+80); setTimeout(()=>s.classList.add('done'), i*520+440); });
+    setTimeout(()=>{ const t=S.tx; t.exec(t); }, reduce?200:1750); }
+};
+
+SCREENS.sent = {
+  html:(r)=>`<div class="stack" style="flex:1;gap:22px">
+    <div class="burst mt-32"><span class="ring"></span><span class="ring r2"></span><span class="core"><svg class="draw" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#6BEFB7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${I.check}</svg></span></div>
+    <div style="text-align:center" class="stack gap-8"><h1>${r.title}</h1><p class="lead">${r.sub}</p></div>
+    <div class="glass list stagger" style="padding:2px 18px">${r.rows.map(([k,v])=>`<div class="kv"><span>${k}</span><span>${v}</span></div>`).join('')}</div>
+    <div class="stack gap-12 mt-auto"><button class="btn primary" data-act="toHome">Done</button>${r.second?`<button class="btn ghost" data-act="${r.second[1]}">${r.second[0]}</button>`:''}</div>
+  </div>`,
+  after(){ setTimeout(()=>confetti(), 300); }
+};
+
+SCREENS.request = {
+  html:()=>`${topbar('Request crypto')}
+  <p class="lead mt-16">Send a FIO Request. It arrives in their wallet with every detail pre-filled, encrypted end to end.</p>
+  <label class="label mt-24" for="toIn">Request from</label>
+  <div class="field mt-8"><span id="toAv" style="display:flex">${ic('at',22,2,'rgba(255,255,255,.5)')}</span><input id="toIn" value="${esc(S.req.from)}" placeholder="name@domain" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+  <div id="toStatus" class="mt-12" style="min-height:30px"></div>
+  <div class="chips mt-8">${CONTACTS.map(c=>`<button class="chip" data-act="pickTo" data-h="${c.h}"><span class="avatar" style="width:28px;height:28px;font-size:12px;background:${c.c}">${c.h[0]}</span>${hh(c.h)}</button>`).join('')}</div>
+  <span class="label mt-24">Asset</span>
+  <div class="chips mt-8">${S.assets.map(a=>`<button class="chip" data-act="pickAsset" data-a="${a.id}" aria-pressed="${S.req.asset===a.id}">${coinImg(a.img,'coin sm')}${a.sym}</button>`).join('')}</div>
+  <div class="glass mt-16" style="padding:18px;text-align:center"><label class="label" for="amtIn">Amount</label>
+    <div class="row" style="justify-content:center;gap:8px;margin-top:6px"><input class="amount-in num" id="amtIn" inputmode="decimal" placeholder="0" value="${esc(S.req.amount)}" style="max-width:220px"><span id="amtSym" style="font-size:24px;font-weight:700;color:var(--lilac)">${asset(S.req.asset).sym}</span></div>
+    <span class="small num" id="amtUsd">≈ $0.00</span></div>
+  <label class="label mt-24 row gap-8" for="memoIn">Memo ${ic('lock',13,2.2)}</label>
+  <div class="field mt-8" style="height:52px"><input id="memoIn" value="${esc(S.req.memo)}" placeholder="Dinner, invoice, rent…" maxlength="60" style="font-weight:500;font-size:15px"></div>
+  <button class="btn primary mt-auto" id="reqGo" data-act="sendRequest" style="margin-top:24px" disabled>Send request</button>`,
+  after(el){ el.querySelectorAll('[data-act="pickTo"]').forEach(b=>b.dataset.mode='req'); el.querySelectorAll('[data-act="pickAsset"]').forEach(b=>b.dataset.mode='req');
+    const inp=$('#toIn',el); inp.id='toIn'; S.req.to=S.req.from; wireRecipient(el,'req'); }
+};
+
+SCREENS.incoming = {
+  html:(id)=>{ const r = S.incoming.find(x=>x.id===id) || S.incoming[0]; if(!r) return `${topbar('FIO Request')}<p class="lead mt-24">No pending requests.</p>`; const a=asset(r.sym.toLowerCase());
+  return `<div class="topbar"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back')}</button><span style="flex:1;display:flex;justify-content:center"><span class="pill lilac">FIO Request</span></span><span style="width:44px"></span></div>
+  <div class="stack gap-12 mt-24 stagger" style="align-items:center;text-align:center">
+    ${avatarFor(r.who,76)}
+    <span class="handle" style="font-size:22px">${hh(r.who)}</span><span class="small">is requesting a payment</span></div>
+  <div class="glass mt-24" style="padding:22px 20px 6px">
+    <div class="row gap-12" style="justify-content:center">${coinImg(a.img)}<span class="big num">${amt(r.amount)} <span style="color:var(--mint-t)">${r.sym}</span></span></div>
+    <p class="small num" style="text-align:center;margin-top:6px">≈ ${usd(r.amount*a.px)}</p>
+    <div class="mt-16"><div class="kv"><span>Memo</span><span>${esc(r.memo)} ${ic('lock',13,2.2,'#B9A6FA')}</span></div><div class="kv"><span>Pay to</span><span>${esc(r.addr)} · ${r.net}</span></div><div class="kv"><span>Your balance</span><span class="num">${amt(a.bal,a.dec)} ${a.sym}</span></div></div>
+  </div>
+  <p class="small mt-16">Details are pre-filled and end-to-end encrypted between you and ${esc(r.who)}. Just confirm.</p>
+  <div class="row gap-12 mt-auto" style="margin-top:24px"><button class="btn ghost" data-act="declineReq" data-r="${r.id}">Decline</button><button class="btn primary" data-act="payReq" data-r="${r.id}">Pay ${amt(r.amount)} ${r.sym}</button></div>`; }
+};
+
+SCREENS.receive = {
+  html:()=>`${topbar('Receive')}
+  <div class="glass mt-24" style="padding:24px;text-align:center"><canvas class="qr" id="qr" width="400" height="400" aria-label="QR code for ${esc(myHandle())}" role="img"></canvas>
+    <div class="handle mt-20" style="font-size:24px">${hh(myHandle())}</div><p class="small mt-8">Works on every linked chain</p>
+    <div class="row gap-12 mt-20"><button class="btn ghost" data-act="copyHandle">${ic('copy',18)}Copy</button><button class="btn primary" data-act="shareHandle">${ic('share',18)}Share</button></div></div>
+  <span class="eyebrow mt-24">Your addresses</span>
+  <div class="glass list mt-12 stagger">${CHAINS.filter(c=>S.linked[c.id]).map(c=>`<div class="li">${coinImg(c.img||c.id,'coin sm')}<span class="stack" style="flex:1"><span class="t">${c.name}</span><span class="s">${esc(c.addr)}</span></span><button class="iconbtn" style="width:40px;height:40px" data-act="copyAddr" data-c="${c.name}" aria-label="Copy ${c.name} address">${ic('copy',16)}</button></div>`).join('')}</div>`,
+  after(el){ drawQR($('#qr',el), myHandle()); }
+};
+
+SCREENS.activity = {
+  tabs:'activity',
+  html:()=>{ const f=S.filter; const list=S.activity.filter(x=>f==='all'||(f==='sent'&&x.kind==='out')||(f==='received'&&x.kind==='in')||(f==='requests'&&(x.kind==='req'||x.kind==='paidreq')));
+  return `<h1>Activity</h1>
+  <div class="chips mt-20">${[['all','All'],['sent','Sent'],['received','Received'],['requests','Requests']].map(([k,l])=>`<button class="chip txt" data-act="filter" data-f="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</div>
+  ${S.incoming.length?`<span class="eyebrow mt-24">Waiting for you</span>${S.incoming.map(r=>`<button class="banner mt-12" data-act="openIncoming" data-r="${r.id}">${avatarFor(r.who)}<span style="flex:1;font-size:14px"><b>${esc(r.who)}</b> requested <b>${amt(r.amount)} ${r.sym}</b></span><span style="font-weight:700;color:var(--mint-t);font-size:14px">Pay</span></button>`).join('')}`:''}
+  <span class="eyebrow mt-24">History</span>
+  <div class="stack mt-8 stagger">${list.length?list.map(x=>actRow(x)).join(''):`<p class="small mt-16">Nothing here yet.</p>`}</div>`; }
+};
+const actLabel = x => ({in:'Received from',out:'Sent to',req:'Requested from',paidreq:'Paid request',domain:'Registered',handle:'Created handle'})[x.kind];
+const actRow = x => { const plus = x.kind==='in', ico = {in:'recv',out:'send',req:'req',paidreq:'send',domain:'globe',handle:'at'}[x.kind];
+  return `<button class="li" data-act="openAct" data-id="${x.id}"><span class="avatar" style="background:${plus?'rgba(107,239,183,.16)':'rgba(185,166,250,.16)'};color:${plus?'#8FF5C9':'#D6CBFF'}">${ic(ico,20)}</span>
+  <span class="stack" style="flex:1;min-width:0"><span class="t" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${actLabel(x)} ${x.who?`<span class="handle">${hh(x.who)}</span>`:''}</span><span class="s">${x.when}${x.memo?' · '+esc(x.memo):''}${x.kind==='req'?' · Pending':''}</span></span>
+  <span class="t num" style="color:${plus?'var(--mint-t)':'#fff'}">${x.amount!=null?(plus?'+':x.kind==='req'?'':'−')+amt(x.amount)+' '+x.sym:''}</span></button>`; };
+
+/* Domains */
+SCREENS.domains = {
+  tabs:'domains',
+  html:()=>`<div class="row" style="justify-content:space-between"><h1>Domains</h1>${S.domains.length?`<button class="btn sm primary" data-go="domainSearch">${ic('plus',18)}New</button>`:''}</div>
+  ${S.domains.length?`<div class="stack gap-16 mt-20 stagger">${S.domains.map(d=>`<button class="nft" data-act="openDomain" data-d="${esc(d.name)}" style="min-height:170px;text-align:left;color:#fff;width:100%"><div class="row" style="justify-content:space-between;position:relative;z-index:1"><span class="pill dim" style="background:rgba(0,0,0,.25)">${d.public?'Public':'Private'}${d.wrapped?' · Polygon':''}</span><img src="${IMG.fmark}" alt="" style="height:26px"></div><div style="position:relative;z-index:1"><div class="dn">@${esc(d.name)}</div><p class="small" style="color:rgba(255,255,255,.8)">${d.handles.length} handle${d.handles.length===1?'':'s'} · Renews ${d.expires}</p></div></button>`).join('')}</div>`
+  :`<div class="promo mt-20" style="padding:24px"><span class="glyph" aria-hidden="true">@</span><h2 style="font-size:22px">Own your corner of web3</h2><p class="small mt-12" style="color:rgba(255,255,255,.82)">A FIO Domain is an NFT you own. Every handle on it carries your brand, like a company email domain for crypto.</p></div>`}
+  <div class="field mt-20" style="cursor:text" data-go="domainSearch"><span style="font-size:20px;font-weight:700;color:var(--lilac)">@</span><input placeholder="Search for a domain" readonly data-go="domainSearch" aria-label="Search for a domain" style="cursor:text"></div>
+  <span class="eyebrow mt-24">Why own a domain</span>
+  <div class="stack gap-12 mt-12 stagger">
+    ${[['at','Brand every handle','you@yourbrand, pay@yourbrand, team@yourbrand'],['users','Public or private','Let anyone register on it, or be the only one who can'],['layers','Issue handles','Give handles to your team, customers or community'],['link','Tradable NFT','Wrap it to Polygon and list it on NFT marketplaces']].map(([i,t,s])=>`<div class="row gap-12"><span class="avatar" style="background:rgba(185,166,250,.14);color:var(--lilac-2)">${ic(i,20)}</span><span class="stack"><b style="font-size:15px">${t}</b><span class="small">${s}</span></span></div>`).join('')}
+  </div>
+  <span class="eyebrow mt-24">Available in this demo</span>
+  <div class="chips mt-12">${['devcon','ibw', S.handle||'ck','mumbai','gm'].filter((v,i,a)=>a.indexOf(v)===i).map(n=>`<button class="chip txt" data-act="searchDomain" data-q="${esc(n)}"><span class="handle">@${esc(n)}</span></button>`).join('')}</div>`
+};
+
+SCREENS.domainSearch = {
+  html:()=>`${topbar('Find a domain')}
+  <div class="field mt-24" style="height:66px"><span style="font-size:24px;font-weight:700;color:var(--lilac)">@</span><input id="dIn" value="${esc(S.dom.q)}" placeholder="yourbrand" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="62" style="font-size:22px;font-weight:700"></div>
+  <p class="small mt-8">Letters, numbers and hyphens. Each domain exists only once.</p>
+  <div id="dRes" class="mt-20"></div>`,
+  after(el){ const inp=$('#dIn',el), res=$('#dRes',el); let t;
+    const run = () => { const v = inp.value.toLowerCase().replace(/[^a-z0-9-]/g,''); if (v!==inp.value) inp.value=v; S.dom.q=v; clearTimeout(t);
+      if (!v){ res.innerHTML=''; return; }
+      res.innerHTML = `<div class="glass shimmer" style="height:180px"></div>`;
+      t = setTimeout(()=>{ const taken = TAKEN_D.includes(v) || S.domains.some(d=>d.name===v);
+        if (taken){ const alt=[v+'-hq', 'the'+v, v+'dao'].filter(x=>x.length<=62); res.innerHTML = `<div class="glass" style="padding:20px;animation:fadeIn .3s both"><span class="pill warn">@${esc(v)} is already owned</span><p class="small mt-12">Try one of these:</p><div class="chips mt-12" style="flex-wrap:wrap">${alt.map(a=>`<button class="chip txt" data-act="searchDomain" data-q="${a}"><span class="handle">@${a}</span></button>`).join('')}</div></div>`; return; }
+        res.innerHTML = `<div class="glass" style="padding:20px;animation:fadeIn .3s both"><div class="row" style="justify-content:space-between"><span class="pill ok">${ic('checkc',16,2.4)}Available</span><span class="small">FIO Domain NFT</span></div>
+          <div class="dn handle mt-16" style="font-size:38px;font-weight:800;letter-spacing:-1px">@${esc(v)}</div>
+          <p class="small mt-8">Handles will look like <span class="handle" style="color:#fff">${esc(S.handle||'you')}@${esc(v)}</span></p>
+          <span class="label" style="display:block;margin-top:20px">Registration</span>
+          <div class="seg mt-8" role="group" aria-label="Registration length">${[1,2,5].map(y=>`<button data-act="term" data-y="${y}" aria-pressed="${S.dom.term===y}">${y} year${y>1?'s':''}</button>`).join('')}</div>
+          <div class="row mt-16" style="justify-content:space-between;align-items:baseline"><span class="small">Total</span><span class="num" style="font-size:22px;font-weight:700" id="dPrice">${amt(DOMAIN_FEE*S.dom.term)} FIO <span class="small">≈ ${usd(DOMAIN_FEE*S.dom.term*FIO_PX)}</span></span></div>
+          <button class="btn primary mt-20" data-act="domainCheckout">Get @${esc(v)}</button></div>`; }, 600); };
+    inp.addEventListener('input', run); el._run = run; if (S.dom.q) run(); setTimeout(()=>inp.focus({preventScroll:true}), 350); }
+};
+
+SCREENS.checkout = {
+  html:()=>{ const v=S.dom.q, fio=DOMAIN_FEE*S.dom.term, usdV=fio*FIO_PX, fa=asset('fio'), ua=asset('usdt');
+  const opts=[['fio','FIO balance',`${amt(fa.bal,2)} FIO available`,'fio',fa.bal>=fio],['usdt','USDT',`${amt(ua.bal,2)} USDT available`,'usdt',ua.bal>=usdV],['card','Card','Visa, Mastercard, Apple Pay','card',true]];
+  return `${topbar('Checkout')}
+  <div class="nft mt-24 reveal" style="min-height:150px"><div class="row" style="justify-content:space-between;position:relative;z-index:1"><span class="pill dim" style="background:rgba(0,0,0,.25)">FIO Domain</span><img src="${IMG.fmark}" alt="" style="height:24px"></div><div class="dn" style="position:relative;z-index:1">@${esc(v)}</div></div>
+  <span class="label mt-24">Pay with</span>
+  <div class="stack gap-10 mt-12" style="gap:10px">${opts.map(([k,l,s,i,ok])=>`<button class="opt" data-act="payWith" data-p="${k}" aria-pressed="${S.dom.pay===k}" ${ok?'':'disabled style="opacity:.4"'}><span class="ico">${i==='card'?ic('card',22):coinImg(i,'coin','width:34px;height:34px')}</span><span class="stack gap-4" style="flex:1"><b>${l}</b><span class="small">${s}</span></span><span class="radio"></span></button>`).join('')}</div>
+  <div class="glass list mt-20" style="padding:2px 18px"><div class="kv"><span>Registration · ${S.dom.term} yr</span><span class="num">${amt(fio)} FIO</span></div><div class="kv"><span>You pay</span><span class="num">${S.dom.pay==='fio'?amt(fio)+' FIO':usd(usdV)}</span></div></div>
+  <p class="small mt-12">Demo pricing based on FIO's example fee table. Real fees vary with the FIO price.</p>
+  <button class="btn primary mt-auto" style="margin-top:24px" data-act="buyDomain">Review &amp; register</button>`; }
+};
+
+SCREENS.minting = {
+  html:()=>`<div class="stack" style="flex:1;justify-content:center;gap:28px;text-align:center">
+    <div class="nft shimmer" style="min-height:170px;opacity:.6"><div class="dn" style="margin-top:auto">@${esc(S.dom.q)}</div></div>
+    <h2>Registering @${esc(S.dom.q)}</h2>
+    <div class="steps glass" style="padding:10px 20px;text-align:left">${['Payment confirmed','Registering on FIO Chain','Minting your domain NFT'].map(t=>`<div class="st"><span class="ic">${ic('check',14,3,'#06231A')}</span>${t}</div>`).join('')}</div></div>`,
+  after(el){ const st=[...el.querySelectorAll('.st')]; st.forEach((s,i)=>{ setTimeout(()=>s.classList.add('on'), i*650+100); setTimeout(()=>s.classList.add('done'), i*650+550); });
+    setTimeout(()=>go('owned',{replace:true,arg:S.dom.q}), reduce?300:2200); }
+};
+
+SCREENS.owned = {
+  html:(n)=>{ const d=S.domains.find(x=>x.name===n); return `<div class="stack" style="flex:1;gap:22px">
+    <div class="stack gap-8 mt-16" style="text-align:center"><span class="pill ok" style="align-self:center">${ic('checkc',16,2.4)}Registered</span><h1>@${esc(n)} is yours</h1></div>
+    <div class="nft reveal" style="min-height:220px"><div class="row" style="justify-content:space-between;position:relative;z-index:1"><span class="pill dim" style="background:rgba(0,0,0,.25)">FIO Domain NFT</span><img src="${IMG.fmark}" alt="" style="height:28px"></div>
+      <div style="position:relative;z-index:1"><div class="dn">@${esc(n)}</div><p class="small" style="color:rgba(255,255,255,.85)">Owner ${hh(myHandle())} · Renews ${d.expires}</p></div></div>
+    <p class="lead" style="text-align:center">Next, create handles on it. Start with one for yourself.</p>
+    <div class="stack gap-12 mt-auto"><button class="btn primary" data-act="newHandle" data-d="${esc(n)}">${ic('plus',20)}Create a handle on @${esc(n)}</button><button class="btn ghost" data-act="openDomain" data-d="${esc(n)}">Manage domain</button></div></div>`; },
+  after(){ setTimeout(()=>confetti(), 400); }
+};
+
+SCREENS.domain = {
+  html:(n)=>{ const d=S.domains.find(x=>x.name===n); if(!d) return topbar('Domain');
+  return `${topbar('@'+esc(n))}
+  <div class="nft mt-20" style="min-height:170px"><div class="row" style="justify-content:space-between;position:relative;z-index:1"><span class="pill dim" style="background:rgba(0,0,0,.25)">${d.wrapped?'Wrapped on Polygon':'On FIO Chain'}</span><img src="${IMG.fmark}" alt="" style="height:26px"></div>
+    <div style="position:relative;z-index:1"><div class="dn">@${esc(n)}</div><p class="small" style="color:rgba(255,255,255,.85)">Renews ${d.expires}</p></div></div>
+  <div class="glass mt-16" style="padding:16px 18px"><label class="row gap-12" for="pubSw" style="cursor:pointer"><span class="stack gap-4" style="flex:1"><b>Public domain</b><span class="small" id="pubTxt">${d.public?'Anyone can register a handle on @'+esc(n)+'.':'Private. Only you can create handles on @'+esc(n)+'.'}</span></span><input type="checkbox" class="switch" id="pubSw" data-act="togglePublic" data-d="${esc(n)}" ${d.public?'checked':''}></label></div>
+  <div class="row mt-24" style="justify-content:space-between"><span class="eyebrow">Handles on @${esc(n)} · ${d.handles.length}</span><button class="pill lilac" style="border:0" data-act="newHandle" data-d="${esc(n)}">${ic('plus',15,2.4)}New handle</button></div>
+  <div class="glass list mt-12">${d.handles.length?d.handles.map(h=>{ const full=`${h.name}@${n}`; return `<div class="li"><span class="avatar" style="background:linear-gradient(135deg,#B9A6FA,#F1BBF2)">${esc(h.name[0])}</span><span class="stack" style="flex:1;min-width:0"><span class="t handle">${hh(full)}</span><span class="s">${h.owner==='me'?(S.primary===full?'Your primary handle':'Yours'):'Issued to '+esc(h.owner)}</span></span>${h.owner==='me'&&S.primary!==full?`<button class="pill lilac" style="border:0" data-act="setPrimary" data-h="${esc(full)}">Make primary</button>`:''}</div>`; }).join('')
+    :`<p class="small" style="padding:18px 0">No handles yet. Create one for yourself or your team.</p>`}</div>
+  <span class="eyebrow mt-24">Manage</span>
+  <div class="glass list mt-12">
+    <button class="li" data-act="wrapDomain" data-d="${esc(n)}"><span class="avatar" style="background:rgba(185,166,250,.14);color:var(--lilac-2)">${ic('layers',20)}</span><span class="stack" style="flex:1"><span class="t">${d.wrapped?'Unwrap to FIO Chain':'Wrap to Polygon'}</span><span class="s">${d.wrapped?'Bring it back to manage on FIO Chain':'Trade it as an NFT on marketplaces'}</span></span>${ic('chev',18)}</button>
+    <button class="li" data-act="renewDomain" data-d="${esc(n)}"><span class="avatar" style="background:rgba(185,166,250,.14);color:var(--lilac-2)">${ic('refresh',20)}</span><span class="stack" style="flex:1"><span class="t">Renew</span><span class="s">Add another year · ${DOMAIN_FEE} FIO</span></span>${ic('chev',18)}</button>
+    <button class="li" data-act="transferDomain" data-d="${esc(n)}"><span class="avatar" style="background:rgba(185,166,250,.14);color:var(--lilac-2)">${ic('send',20)}</span><span class="stack" style="flex:1"><span class="t">Transfer</span><span class="s">Send the domain to another handle</span></span>${ic('chev',18)}</button>
+  </div>`; }
+};
+
+SCREENS.newHandle = {
+  html:(n)=>`${topbar('New handle')}
+  <p class="lead mt-16">Create a handle on <span class="handle" style="color:#fff">@${esc(n)}</span>. Each handle is its own NFT.</p>
+  <label class="label mt-24" for="nhIn">Name</label>
+  <div class="field mt-8" style="padding-right:6px"><input id="nhIn" placeholder="${esc(S.handle||'me')}" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="40"><span class="pill lilac" style="height:44px;border-radius:14px;font-size:16px">@${esc(n)}</span></div>
+  <div id="nhSt" class="mt-12" style="min-height:30px"></div>
+  <span class="label mt-16">Who's it for?</span>
+  <div class="stack mt-12" style="gap:10px">
+    <button class="opt" data-act="nhOwner" data-v="me" aria-pressed="true"><span class="ico">${ic('face',22)}</span><span class="stack gap-4" style="flex:1"><b>Me</b><span class="small">Add it to this wallet</span></span><span class="radio"></span></button>
+    <button class="opt" data-act="nhOwner" data-v="other" aria-pressed="false"><span class="ico">${ic('users',22)}</span><span class="stack gap-4" style="flex:1"><b>Someone else</b><span class="small">A teammate, customer or community member</span></span><span class="radio"></span></button>
+  </div>
+  <div id="nhOther" class="field mt-12" hidden><input id="nhTo" placeholder="Their FIO public key or handle" autocomplete="off" spellcheck="false"></div>
+  <div class="glass list mt-20" style="padding:2px 18px"><div class="kv"><span>Handle fee</span><span class="num">${HANDLE_FEE} FIO</span></div><div class="kv"><span>Preview</span><span class="handle" id="nhPrev">${hh((S.handle||'me')+'@'+n)}</span></div></div>
+  <button class="btn primary mt-auto" id="nhGo" data-act="createHandle" data-d="${esc(n)}" style="margin-top:24px" disabled>Create handle</button>`,
+  after(el, n){ const inp=$('#nhIn',el), st=$('#nhSt',el), b=$('#nhGo',el), pv=$('#nhPrev',el); el._owner='me';
+    const d=S.domains.find(x=>x.name===n);
+    const chk=()=>{ const v=inp.value.toLowerCase().replace(/[^a-z0-9-]/g,''); if(v!==inp.value) inp.value=v; pv.innerHTML=hh((v||S.handle||'me')+'@'+n);
+      const dup=d.handles.some(h=>h.name===v); st.innerHTML = !v?'':dup?`<span class="pill warn">${esc(v)}@${esc(n)} already exists</span>`:`<span class="pill ok">${ic('checkc',16,2.4)}${esc(v)}@${esc(n)} is available</span>`;
+      b.disabled = !v || dup || (el._owner==='other' && !$('#nhTo',el).value.trim()); b.textContent = v?`Create ${v}@${n}`:'Create handle'; };
+    el._chk=chk; inp.addEventListener('input',chk); $('#nhTo',el).addEventListener('input',chk); setTimeout(()=>inp.focus({preventScroll:true}),350); }
+};
+
+SCREENS.settings = {
+  tabs:'settings',
+  html:()=>`<h1>Settings</h1>
+  <div class="glass row gap-16 mt-20" style="padding:18px"><span class="fiocoin" style="width:56px;height:56px;border-radius:28px;flex:none"><img src="${IMG.fmark}" alt=""></span><span class="stack gap-4" style="min-width:0"><span class="handle" style="font-size:20px">${hh(myHandle())}</span><span class="small">Primary handle · ${allHandles().length} handle${allHandles().length===1?'':'s'} · ${S.domains.length} domain${S.domains.length===1?'':'s'}</span></span></div>
+  <div class="glass list mt-16 stagger">
+    ${row('at','My handles','Choose your primary handle','go:handles')}
+    ${row('link','Linked chains',`${Object.values(S.linked).filter(Boolean).length} chains linked`,'go:link:settings')}
+    ${row('layers','FIO network','FIO Chain · FIO 2.0 roadmap','go:network')}
+    ${row('wallet','Use your handle anywhere','100+ wallets, exchanges and apps','go:wallets')}
+  </div>
+  <div class="glass list mt-16">
+    <label class="li" for="fidSw" style="cursor:pointer"><span class="avatar" style="background:rgba(185,166,250,.14);color:var(--lilac-2)">${ic('face',20)}</span><span class="stack" style="flex:1"><span class="t">${S.via==='mm'?'Biometric confirm':'Face ID for payments'}</span><span class="s">${S.via==='mm'?'Payments approved in MetaMask':S.secure==='passkey'?'Passkey on this device':'Recovery phrase backed up'}</span></span><input class="switch" type="checkbox" id="fidSw" data-act="toggleFace" ${S.faceId?'checked':''}></label>
+    ${row('refresh','Reset demo','Start again from the splash screen','act:resetDemo')}
+  </div>
+  <p class="small mt-20" style="text-align:center">FIO Wallet prototype · Demo balances, no real funds</p>`
+};
+const row = (i,t,s,target) => { const [k,v,a]=target.split(':'); return `<button class="li" ${k==='go'?`data-go="${v}" ${a?`data-arg="${a}"`:''}`:`data-act="${v}"`}><span class="avatar" style="background:rgba(185,166,250,.14);color:var(--lilac-2)">${ic(i,20)}</span><span class="stack" style="flex:1"><span class="t">${t}</span><span class="s">${s}</span></span>${ic('chev',18)}</button>`; };
+const allHandles = () => { const a=[`${S.handle||'yourname'}@${S.domain}`]; S.domains.forEach(d=>d.handles.filter(h=>h.owner==='me').forEach(h=>a.push(`${h.name}@${d.name}`))); return a; };
+
+SCREENS.handles = {
+  html:()=>`${topbar('My handles')}
+  <p class="lead mt-16">Your primary handle is the one people see first. All of them reach this wallet.</p>
+  <div class="glass list mt-20">${allHandles().map(h=>`<button class="li" data-act="setPrimary" data-h="${esc(h)}"><span class="avatar" style="background:linear-gradient(135deg,#B9A6FA,#F1BBF2)">${esc(h[0])}</span><span class="stack" style="flex:1;min-width:0"><span class="t handle">${hh(h)}</span><span class="s">${h===myHandle()?'Primary':'Tap to make primary'}</span></span>${h===myHandle()?ic('checkc',22,2,'#6BEFB7'):''}</button>`).join('')}</div>
+  <button class="btn ghost mt-20" data-tabgo="domains">${ic('globe',20)}Get handles on your own domain</button>`
+};
+
+SCREENS.network = {
+  html:()=>`${topbar('FIO network')}
+  <div class="glass mt-20" style="padding:20px"><div class="row" style="justify-content:space-between"><b style="font-size:17px">FIO Chain</b><span class="pill ok"><span style="width:8px;height:8px;border-radius:4px;background:var(--mint)"></span>Live</span></div>
+    <p class="small mt-8">Handles, domains, FIO Requests and encrypted FIO Data live here today.</p></div>
+  <span class="eyebrow mt-24">Bridged today</span>
+  <div class="glass list mt-12">
+    <div class="li">${coinImg('eth')}<span class="stack" style="flex:1"><span class="t">Wrapped FIO on Ethereum</span><span class="s">WFIO · 1 WFIO = 1 FIO</span></span><span class="pill ok">Live</span></div>
+    <div class="li">${coinImg('base')}<span class="stack" style="flex:1"><span class="t">Wrapped FIO on Base</span><span class="s">WFIO · Uniswap V3 pool</span></span><span class="pill ok">Live</span></div>
+    <div class="li">${coinImg('pol')}<span class="stack" style="flex:1"><span class="t">FIO Domains on Polygon</span><span class="s">Wrap domains as tradable NFTs</span></span><span class="pill ok">Live</span></div>
+  </div>
+  <span class="eyebrow mt-24">FIO 2.0 roadmap</span>
+  <div class="glass list mt-12">
+    <div class="li"><span class="avatar" style="background:rgba(253,255,155,.12);color:var(--yellow)">${ic('bolt',20)}</span><span class="stack" style="flex:1"><span class="t">EVM compatibility</span><span class="s">Use FIO from EVM wallets and apps</span></span><span class="pill soon">In progress</span></div>
+    <div class="li">${coinImg('sol')}<span class="stack" style="flex:1"><span class="t">Move to a high-speed chain</span><span class="s">Solana or another chain being evaluated</span></span><span class="pill soon">Planned</span></div>
+  </div>
+  <p class="small mt-16">Your handle and domains carry over. Roadmap items reflect FIO team plans and may change.</p>`
+};
+
+SCREENS.wallets = {
+  html:()=>`${topbar('Use your handle anywhere')}
+  <p class="lead mt-16">${hh(myHandle())} works in FIO-enabled wallets, exchanges and apps. Here are some of them.</p>
+  <div class="walletgrid mt-20 stagger">${WALLETS.map(w=>`<div class="glass wcard"><span class="lg" style="background:${w.c}">${esc(w.n.split(' ').map(x=>x[0]).join('').slice(0,2))}</span><b style="font-size:14px">${esc(w.n)}</b><span class="small" style="font-size:12px">${esc(w.d)}</span></div>`).join('')}</div>
+  <p class="small mt-20" style="text-align:center">Supported by 100+ wallets, exchanges and platforms</p>`
+};
+
+/* ---------- actions ---------- */
+function addAct(x){ x.id = S.nextId++; x.when = 'Just now'; S.activity.unshift(x); }
+const A = {
+  back, closeSheet:()=>closeSheet(),
+  restore(){ const v=$('#rsH').value.trim().toLowerCase(); const m=v.match(/^([a-z0-9-]+)@([a-z0-9-]+)$/); S.handle=m?m[1]:'ck'; S.domain=m?m[2]:'web3'; hist=[]; go('creating',{noHist:true}); },
+  claimNext(){ go(S.via==='mm' ? 'link' : 'secure'); },
+  secure(b){ S.secure=b.dataset.v; refresh(); },
+  reveal(){ S.seedShown=true; refresh(); },
+  secureNext(){ if (S.secure==='passkey') faceId('Setting up Face ID', ()=>{ toast('Face ID is ready'); go('link'); }); else go('link'); },
+  finishSetup(){ hist=[]; go('creating',{noHist:true}); },
+  toHome(){ hist=[]; go('home',{noHist:true,dir:'fade'}); },
+  domainFromReady(){ hist=[]; S.dom.q = S.handle||''; go('domains',{noHist:true,dir:'fade'}); setTimeout(()=>go('domainSearch'), 380); },
+  copyHandle(){ const h=myHandle(); try{ navigator.clipboard.writeText(h).catch(()=>{}); }catch(e){} toast(`Copied ${h}`); },
+  shareHandle(){ const h=myHandle(); try{ navigator.clipboard.writeText(`Pay me at ${h}`).catch(()=>{}); }catch(e){} toast('Link copied to share'); },
+  copyAddr(b){ toast(`${b.dataset.c} address copied`); },
+  noNotes(){ toast('You are all caught up','bell'); },
+  openIncoming(b){ go('incoming',{arg:b?.dataset?.r || S.incoming[0]?.id}); },
+  openAsset(b){ assetSheet(b.dataset.a); },
+  sendAsset(b){ S.send.asset=b.dataset.a; closeSheet(true); go('send'); },
+  recvAsset(){ closeSheet(true); go('receive'); },
+  openSend(){ go('send'); },
+  pickTo(b){ const el=stage.querySelector('.screen:not(.leave)'); const inp=$('#toIn',el); inp.value=b.dataset.h; el._look(); },
+  pickAsset(b){ const el=stage.querySelector('.screen:not(.leave)'); const D = cur.name==='send'?S.send:S.req; D.asset=b.dataset.a;
+    el.querySelectorAll('[data-act="pickAsset"]').forEach(x=>x.setAttribute('aria-pressed', x.dataset.a===D.asset)); const a=asset(D.asset);
+    $('#amtSym',el).textContent=a.sym; const ab=$('#amtBal',el); if (ab) ab.textContent=amt(a.bal,a.dec); if (D.to) el._look(true); else el._validate(); },
+  max(){ const el=stage.querySelector('.screen:not(.leave)'); const a=asset(S.send.asset); S.send.amount=String(+(a.bal).toFixed(a.dec)); $('#amtIn',el).value=S.send.amount; el._fit(); el._validate(); },
+  reviewSend(){ const a=asset(S.send.asset), n=parseFloat(S.send.amount), to=S.send.to, raw=resolveState(to).s==='raw', ch=chainOfAsset(a.id);
+    startTx({title:'Send', out:true, img:a.img, sym:a.sym, dec:a.dec, amount:n, px:a.px, from:myHandle(), fromAddr:chainAddr(a.net), to: raw?to.slice(0,6)+'…'+to.slice(-4):to, raw,
+      toAddr: raw?'Raw address':fakeAddr(to,ch)+' · '+a.net, net:a.net, feeAsset:a.id==='usdt'?'eth':a.id, feeBase:FEES[a.id], memo:S.send.memo,
+      exec(t){ a.bal=+(a.bal-n).toFixed(8); const fa=asset(t.feeAsset); fa.bal=+(fa.bal-txFee(t)).toFixed(8);
+        addAct({kind:'out', who:raw?to.slice(0,8)+'…':to, sym:a.sym, amount:n, memo:S.send.memo, net:a.net});
+        const r={title:'Sent!', sub:`${amt(n,a.dec)} ${a.sym} is on its way to <span class="handle" style="color:var(--lilac-2)">${raw?esc(to.slice(0,10))+'…':esc(to)}</span>`, rows:[['Status',`<span style="color:var(--mint-t)">● Confirmed</span>`],['Network',a.net],['Network fee',`${+txFee(t).toPrecision(2)} ${t.feeAsset==='usdt'?'ETH':fa.sym}`],...(S.send.memo?[['Memo',esc(S.send.memo)+' · encrypted']]:[]),['Tx hash',`${t.hash.slice(0,8)}…${t.hash.slice(-6)}`]], second:['Send another','again']};
+        S.send={to:'',asset:a.id,amount:'',memo:''}; S.counted=true; hist=[]; go('sent',{arg:r,noHist:true}); } }); },
+  txSpeed(b){ S.tx.speed=+b.dataset.i; refresh(); },
+  txCancel(){ toast('Transaction cancelled','x'); back(); },
+  txApprove(){ faceId('Approve transaction', ()=>{ go('broadcast',{replace:true}); }); },
+  again(){ hist=[{name:'home'}]; go('send',{noHist:true}); },
+  sendRequest(){ const a=asset(S.req.asset), n=parseFloat(S.req.amount), who=S.req.to||S.req.from; addAct({kind:'req', who, sym:a.sym, amount:n, memo:S.req.memo, net:a.net});
+    const r={title:'Request sent', sub:`<span class="handle" style="color:var(--lilac-2)">${esc(who)}</span> will see it in any FIO-enabled wallet.`, rows:[['Amount',`${amt(n)} ${a.sym}`],['Network',a.net],...(S.req.memo?[['Memo',esc(S.req.memo)+' · encrypted']]:[]),['Status','Waiting for payment']]};
+    S.req={from:'',asset:a.id,amount:'',memo:''}; hist=[]; go('sent',{arg:r,noHist:true}); },
+  declineReq(b){ S.incoming=S.incoming.filter(x=>x.id!==b.dataset.r); toast('Request declined','x'); hist=[]; go('home',{noHist:true,dir:'back'}); },
+  payReq(b){ const r=S.incoming.find(x=>x.id===b.dataset.r), a=asset(r.sym.toLowerCase());
+    startTx({title:'Pay request', out:true, img:a.img, sym:a.sym, dec:a.dec, amount:r.amount, px:a.px, from:myHandle(), fromAddr:chainAddr(r.net), to:r.who, toAddr:r.addr+' · '+r.net, net:r.net,
+      feeAsset:a.id==='usdt'?'eth':a.id, feeBase:FEES[a.id], memo:r.memo,
+      exec(t){ a.bal=+(a.bal-r.amount).toFixed(8); const fa=asset(t.feeAsset); fa.bal=+(fa.bal-txFee(t)).toFixed(8);
+        S.incoming=S.incoming.filter(x=>x.id!==r.id); addAct({kind:'paidreq', who:r.who, sym:r.sym, amount:r.amount, memo:r.memo, net:r.net});
+        hist=[]; go('sent',{noHist:true,arg:{title:'Paid',sub:`${amt(r.amount)} ${r.sym} sent to <span class="handle" style="color:var(--lilac-2)">${esc(r.who)}</span>. No copy-paste errors.`,rows:[['Status',`<span style="color:var(--mint-t)">● Confirmed</span>`],['Memo',esc(r.memo)+' · encrypted'],['Network',r.net],['Tx hash',`${t.hash.slice(0,8)}…${t.hash.slice(-6)}`]]}}); } }); },
+  filter(b){ S.filter=b.dataset.f; refresh(); },
+  openAct(b){ const x=S.activity.find(y=>y.id==b.dataset.id); openSheet(`<h2 style="text-align:center">${actLabel(x)}</h2><div style="text-align:center" class="mt-16">${x.amount!=null?`<div class="big num">${amt(x.amount)} <span class="at">${x.sym}</span></div>`:''}${x.who?`<p class="handle mt-8" style="font-size:18px">${hh(x.who)}</p>`:''}</div>
+    <div class="glass list mt-20" style="padding:2px 18px"><div class="kv"><span>Status</span><span style="color:${x.kind==='req'?'var(--yellow)':'var(--mint-t)'}">${x.kind==='req'?'Pending':'Confirmed'}</span></div>${x.net?`<div class="kv"><span>Network</span><span>${x.net}</span></div>`:''}<div class="kv"><span>When</span><span>${x.when}</span></div>${x.memo?`<div class="kv"><span>Memo</span><span>${esc(x.memo)} ${ic('lock',13,2.2,'#B9A6FA')}</span></div>`:''}</div>
+    <button class="btn ghost mt-20" data-act="closeSheet">Close</button>`); },
+  searchDomain(b){ S.dom.q=b.dataset.q; if (cur.name==='domainSearch'){ const el=stage.querySelector('.screen:not(.leave)'); $('#dIn',el).value=S.dom.q; el._run(); } else go('domainSearch'); },
+  term(b){ S.dom.term=+b.dataset.y; const el=stage.querySelector('.screen:not(.leave)'); el.querySelectorAll('[data-act="term"]').forEach(x=>x.setAttribute('aria-pressed', +x.dataset.y===S.dom.term));
+    $('#dPrice',el).innerHTML = `${amt(DOMAIN_FEE*S.dom.term)} FIO <span class="small">≈ ${usd(DOMAIN_FEE*S.dom.term*FIO_PX)}</span>`; },
+  domainCheckout(){ const fio=DOMAIN_FEE*S.dom.term; if (asset('fio').bal<fio) S.dom.pay = asset('usdt').bal>=fio*FIO_PX?'usdt':'card'; go('checkout'); },
+  payWith(b){ S.dom.pay=b.dataset.p; refresh(); },
+  buyDomain(){ const q=S.dom.q, term=S.dom.term, fio=DOMAIN_FEE*term, usdV=fio*FIO_PX, pay=S.dom.pay;
+    startTx({title:'Register domain', img: pay==='usdt'?'usdt':'fio', sym: pay==='fio'?'FIO':pay==='usdt'?'USDT':'USD', dec:2, amount: pay==='fio'?fio:usdV, px: pay==='fio'?FIO_PX:1, usd:usdV,
+      from:myHandle(), fromAddr: pay==='card'?'Card payment':chainAddr('FIO Chain'), to:'FIO Chain', contract:true, toAddr:'fio.address · regdomain', net:'FIO Chain', feeBase:0,
+      action:`Register <span class="handle">@${esc(q)}</span> · ${term} yr`,
+      exec(){ if (pay==='fio') asset('fio').bal-=fio; else if (pay==='usdt') asset('usdt').bal=+(asset('usdt').bal-usdV).toFixed(2);
+        const y=new Date(); y.setFullYear(y.getFullYear()+term);
+        S.domains.unshift({name:q, public:false, expires:y.toLocaleDateString('en-US',{month:'short',year:'numeric'}), handles:[], wrapped:false});
+        addAct({kind:'domain', who:'@'+q, sym:pay==='fio'?'FIO':'USD', amount:null, memo:`${term} year${term>1?'s':''}`, net:'FIO Chain'}); hist=[]; go('minting',{noHist:true}); } }); },
+  openDomain(b){ go('domain',{arg:b.dataset.d}); },
+  togglePublic(b){ const d=S.domains.find(x=>x.name===b.dataset.d); d.public=b.checked; const el=stage.querySelector('.screen:not(.leave)');
+    $('#pubTxt',el).textContent = d.public?`Anyone can register a handle on @${d.name}.`:`Private. Only you can create handles on @${d.name}.`; toast(d.public?`@${d.name} is now public`:`@${d.name} is now private`); },
+  newHandle(b){ go('newHandle',{arg:b.dataset.d}); },
+  nhOwner(b){ const el=stage.querySelector('.screen:not(.leave)'); el._owner=b.dataset.v; el.querySelectorAll('[data-act="nhOwner"]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===el._owner)); $('#nhOther',el).hidden = el._owner!=='other'; el._chk(); },
+  createHandle(b){ const el=stage.querySelector('.screen:not(.leave)'); const n=b.dataset.d, v=$('#nhIn',el).value, owner=el._owner==='me'?'me':$('#nhTo',el).value.trim();
+    startTx({title:'Create handle', img:'fio', sym:'FIO', dec:2, amount:HANDLE_FEE, px:FIO_PX, from:myHandle(), fromAddr:chainAddr('FIO Chain'), to:'FIO Chain', contract:true, toAddr:'fio.address · regaddress', net:'FIO Chain', feeBase:0,
+      action:`Register <span class="handle">${esc(v)}@${esc(n)}</span>${owner==='me'?'':' for '+esc(owner)}`,
+      exec(){ const d=S.domains.find(x=>x.name===n); d.handles.push({name:v, owner}); asset('fio').bal-=HANDLE_FEE; addAct({kind:'handle', who:`${v}@${n}`, sym:'FIO', amount:null, memo: owner==='me'?'For me':'Issued to '+owner, net:'FIO Chain'});
+        hist = hist.filter(h=>!['newHandle','owned','domain','tx'].includes(h.name)); go('domain',{arg:n,replace:true,dir:'back'}); setTimeout(()=>{ toast(`${v}@${n} created`); confetti(); }, 350); } }); },
+  setPrimary(b){ S.primary=b.dataset.h; toast(`${S.primary} is now primary`); refresh(); },
+  wrapDomain(b){ const d=S.domains.find(x=>x.name===b.dataset.d);
+    if (d.wrapped){ faceId('Approve unwrap', ()=>{ d.wrapped=false; refresh(); toast(`@${d.name} is back on FIO Chain`); }); return; }
+    openSheet(`<h2>Wrap @${esc(d.name)} to Polygon</h2><p class="small mt-12">The FIO Bridge locks your domain on FIO Chain and mints the same domain as an NFT on Polygon, so you can list it on NFT marketplaces. Your handles keep working.</p>
+      <label class="label mt-20" for="polAddr" style="display:block">Polygon address</label><div class="field mt-8"><input id="polAddr" value="0x7850…cF4B" spellcheck="false"></div>
+      <div class="glass list mt-16" style="padding:2px 18px"><div class="kv"><span>Bridge</span><span>FIO Bridge oracles</span></div><div class="kv"><span>Arrives as</span><span>FIO Domain NFT</span></div></div>
+      <button class="btn primary mt-20" data-act="confirmWrap" data-d="${esc(d.name)}">${ic('layers',20)}Wrap domain</button>`); },
+  confirmWrap(b){ closeSheet(); faceId('Approve wrap', ()=>{ const d=S.domains.find(x=>x.name===b.dataset.d); d.wrapped=true; refresh(); toast(`@${d.name} wrapped to Polygon`); confetti(); }); },
+  renewDomain(b){ const d=S.domains.find(x=>x.name===b.dataset.d); openSheet(`<h2>Renew @${esc(d.name)}</h2><p class="small mt-12">Adds one year. Renews ${esc(d.expires)} today.</p>
+    <div class="glass list mt-16" style="padding:2px 18px"><div class="kv"><span>Renewal · 1 year</span><span class="num">${DOMAIN_FEE} FIO</span></div><div class="kv"><span>FIO balance</span><span class="num">${amt(asset('fio').bal,2)} FIO</span></div></div>
+    <button class="btn primary mt-20" data-act="confirmRenew" data-d="${esc(d.name)}" ${asset('fio').bal<DOMAIN_FEE?'disabled':''}>Renew for ${DOMAIN_FEE} FIO</button>`); },
+  confirmRenew(b){ closeSheet(); faceId('Approve renewal', ()=>{ const d=S.domains.find(x=>x.name===b.dataset.d); asset('fio').bal-=DOMAIN_FEE; const [m,y]=d.expires.split(' '); d.expires=`${m} ${+y+1}`; refresh(); toast(`Renewed to ${d.expires}`); }); },
+  transferDomain(b){ openSheet(`<h2>Transfer @${esc(b.dataset.d)}</h2><p class="small mt-12">The new owner gets full control of the domain and the right to manage its handles. This can't be undone.</p>
+    <label class="label mt-20" for="trTo" style="display:block">New owner</label><div class="field mt-8"><input id="trTo" placeholder="name@domain or FIO public key" spellcheck="false" autocapitalize="off"></div>
+    <button class="btn primary mt-20" data-act="confirmTransfer" data-d="${esc(b.dataset.d)}">Transfer domain</button>`); },
+  confirmTransfer(b){ const to=$('#trTo').value.trim(); if(!to){ $('#trTo').focus(); return; } closeSheet(); faceId('Approve transfer', ()=>{ S.domains=S.domains.filter(x=>x.name!==b.dataset.d); toast(`@${b.dataset.d} sent to ${to}`); hist=[]; go('domains',{noHist:true,dir:'back'}); }); },
+  connectMM(){ openSheet(`<div class="stack gap-16" style="align-items:center;text-align:center">
+      <div class="row gap-12" style="justify-content:center"><span class="fiocoin" style="width:56px;height:56px;border-radius:28px"><img src="${IMG.fmark}" alt=""></span>
+        <span class="row gap-4" aria-hidden="true"><i style="width:5px;height:5px;border-radius:3px;background:var(--lilac)"></i><i style="width:5px;height:5px;border-radius:3px;background:var(--lilac);opacity:.6"></i><i style="width:5px;height:5px;border-radius:3px;background:var(--lilac);opacity:.3"></i></span>
+        <span style="width:56px;height:56px;border-radius:28px;background:#fff;display:flex;align-items:center;justify-content:center"><img src="${IMG.metamask}" alt="MetaMask" style="width:42px;height:42px"></span></div>
+      <h2>Connect with MetaMask</h2><p class="small">Use FIO with the wallet you already have. No new account or password.</p></div>
+    <div class="glass list mt-20" style="padding:4px 18px" id="mmBody">
+      <div class="kv"><span>FIO will be able to</span><span></span></div>
+      <div class="row gap-12" style="min-height:48px">${ic('eye',18,2,'#B9A6FA')}<span style="font-size:14px">See your account address</span></div>
+      <div class="row gap-12" style="min-height:48px">${ic('layers',18,2,'#B9A6FA')}<span style="font-size:14px">Add the FIO Snap to manage handles</span></div>
+      <div class="row gap-12" style="min-height:48px">${ic('shield',18,2,'#8FF5C9')}<span style="font-size:14px">Never move funds without your approval</span></div>
+    </div>
+    <div class="row gap-12 mt-20" id="mmBtns"><button class="btn ghost" data-act="closeSheet">Cancel</button><button class="btn primary" data-act="approveMM">Connect</button></div>`); },
+  approveMM(){ const body=$('#mmBody'), btns=$('#mmBtns');
+    btns.innerHTML = `<button class="btn ghost" disabled style="opacity:1"><span class="spinner"></span>Waiting for MetaMask…</button>`;
+    setTimeout(()=>{ body.innerHTML = `<div class="steps" style="padding:6px 0">${['Account connected','FIO Snap installed'].map(t=>`<div class="st"><span class="ic">${ic('check',14,3,'#06231A')}</span>${t}</div>`).join('')}</div>`;
+      const st=[...body.querySelectorAll('.st')]; st.forEach((x,i)=>{ setTimeout(()=>x.classList.add('on','done'), 150+i*450); });
+      setTimeout(()=>{ btns.innerHTML = `<div class="pill ok" style="height:44px;width:100%;justify-content:center;border-radius:22px;font-size:14px"><img src="${IMG.metamask}" alt="" style="width:22px;height:22px">Connected · 0x7850…cF4B</div>`; }, 1100);
+      setTimeout(()=>{ S.via='mm'; closeSheet(); hist=[{name:'welcome'}]; go('claim',{noHist:true}); }, 2000);
+    }, reduce?100:1100); },
+  toggleFace(b){ S.faceId=b.checked; toast(S.faceId?'Face ID on':'Face ID off'); },
+  resetDemo(){ openSheet(`<h2>Reset demo?</h2><p class="small mt-12">This clears your handle, domains and activity, and restores the demo balances.</p><div class="row gap-12 mt-20"><button class="btn ghost" data-act="closeSheet">Cancel</button><button class="btn primary" data-act="confirmReset">Reset</button></div>`); },
+  confirmReset(){ S=freshState(); hist=[]; closeSheet(true); go('splash',{noHist:true,dir:'fade'}); }
+};
+
+device.addEventListener('click', e=>{
+  const t = e.target.closest('[data-act],[data-go],[data-tab],[data-tabgo]'); if (!t || !device.contains(t)) return;
+  if (t.matches('input.switch') && !t.dataset.act) return;
+  if (t.dataset.tab){ if (cur.name!==t.dataset.tab){ hist=[]; go(t.dataset.tab,{noHist:true,dir:'fade'}); } return; }
+  if (t.dataset.tabgo){ hist=[]; go(t.dataset.tabgo,{noHist:true,dir:'fade'}); return; }
+  if (t.dataset.go){ go(t.dataset.go,{arg:t.dataset.arg}); return; }
+  const f = A[t.dataset.act]; if (f) f(t, e);
+});
+device.addEventListener('change', e=>{ const t=e.target; if (t.dataset && t.dataset.link){ S.linked[t.dataset.link]=t.checked; toast(`${CHAINS.find(c=>c.id===t.dataset.link).name} ${t.checked?'linked to':'unlinked from'} ${myHandle()}`, t.checked?'link':'x'); } });
+device.addEventListener('keydown', e=>{ if (e.key==='Escape' && sheetEl) closeSheet(); });
+
+[device, stage].forEach(n=>n.addEventListener('scroll', ()=>{ if (n.scrollTop||n.scrollLeft){ n.scrollTop=0; n.scrollLeft=0; } }));
+// Android back button: returns true when the app handled it
+window.fioBack = () => {
+  if (stage.querySelector('.fid')) return true;
+  if (sheetEl){ closeSheet(); return true; }
+  if (!cur || cur.name==='splash') return false;
+  if (hist.length){ back(); return true; }
+  if (tabScreens.includes(cur.name) && cur.name!=='home'){ go('home',{noHist:true,dir:'fade'}); return true; }
+  return false;
+};
+go('splash',{noHist:true,dir:'fade'});
+})();
+</script>
